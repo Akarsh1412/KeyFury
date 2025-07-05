@@ -7,6 +7,7 @@ import Login from './components/Login.jsx'
 import Home from './components/Home.jsx'
 import Multiplayer from './components/Multiplayer.jsx'
 import Type from './components/Type.jsx'
+import Signup from './components/Signup.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -15,6 +16,7 @@ const router = createBrowserRouter(
       <Route path="type" element={<Type />} />
       <Route path="multiplayer" element={<Multiplayer />} />
       <Route path="login" element={<Login />} />
+      <Route path="signup" element={<Signup />} />
     </Route>
   )
 )
