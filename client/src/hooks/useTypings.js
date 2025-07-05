@@ -1,37 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-const isKeyBoardCodeAllowed = (code) => {
-    return (
-        code.startsWith('Key') || // A-Z
-        code.startsWith('Digit') || // 0-9
-        code === 'Space' || // Spacebar
-        code === 'Backspace'
-    );
-}
+import { isKeyboardCodeAllowed } from '../utils/helpers';
 
 const useTypings = (enabled) => {
     const [cursor, setCursor] = useState(0);
     const [typed, setTyped] = useState('');
     const totalTyped = useRef(0);
 
-    const keyDownHandler = useCallback(({key, code}) => {
-        if (!enabled || !isKeyBoardCodeAllowed(code))
+    const keyDownHandler = useCallback((event) => {
+        const { key, code } = event;
+        if (!enabled || !isKeyboardCodeAllowed(code))
             return;
-        if (code === 'Backspace') {
-            setTyped((prev) => prev.slice(0, -1));
-            setCursor((prev) => Math.max(prev - 1, 0));
-            totalTyped.current = Math.max(totalTyped.current - 1, 0);
-        } else if (key.length === 1) {
-            setTyped((prev) => prev + key);
-            setCursor((prev) => prev + 1);
-            totalTyped.current += 1;
+
+        event.preventDefault();
+        
+        switch (key) {
+            case 'Backspace':
+                setTyped((prev) => prev.slice(0,-1));
+                setCursor((cursor) => cursor-1);
+                totalTyped.current -= 1;
+                break;
+            default:
+                setTyped((prev) => prev.concat(key));
+                setCursor((cursor) => cursor+1);
+                totalTyped.current += 1;
         }
-    }, [cursor, enabled]);
+    }, [enabled]);
 
     const clearTyped = useCallback(() => {
         setTyped('');
         setCursor(0);
-        totalTyped.current = 0;
     }, []);
 
     const resetTotalTyped = useCallback(() => {
@@ -40,10 +37,7 @@ const useTypings = (enabled) => {
 
     useEffect(() => {
         window.addEventListener('keydown', keyDownHandler);
-
-        return () => {
-            window.removeEventListener('keydown', keyDownHandler);
-        }
+        return () => window.removeEventListener('keydown', keyDownHandler);
     }, [keyDownHandler])
 
     return {

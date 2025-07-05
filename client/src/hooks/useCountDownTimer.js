@@ -1,8 +1,10 @@
-import { useState, useRef, useCallback, use, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 const useCountDownTimer = (seconds) => {
     const [timeLeft, setTimeLeft] = useState(seconds);
     const intervalRef = useRef(null);
+    const hasTimerEnded = timeLeft <= 0;
+    const isRunning = intervalRef.current !== null;
 
     const startCountDown = useCallback(() => {
         console.log("Starting countdown timer");
@@ -10,23 +12,31 @@ const useCountDownTimer = (seconds) => {
         intervalRef.current = setInterval(() => {
             setTimeLeft((timeLeft) => timeLeft-1);
         }, 1000)
-    }, [setTimeLeft]);
+    }, [setTimeLeft, hasTimerEnded, isRunning]);
 
     const resetCountDown = useCallback(() => {
         console.log("reseting Countdown");
 
-        if (intervalRef.current)
-            clearInterval(intervalRef.current);
-
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
         setTimeLeft(seconds);
     }, [seconds])
 
     useEffect(() => {
-        if (!timeLeft && intervalRef.current) {
+        resetCountDown();
+    }, [seconds, resetCountDown]);
+
+    useEffect(() => {
+        if (hasTimerEnded) {
             console.log("Countdown finished");
             clearInterval(intervalRef.current);
+            intervalRef.current = null;
         }
-    }, [timeLeft, intervalRef]);
+    }, [hasTimerEnded]);
+
+    useEffect(() => {
+        return () => clearInterval(intervalRef.current);
+    }, []);
 
     return { timeLeft, startCountDown, resetCountDown };
 }

@@ -1,9 +1,12 @@
-function Results({ errors, accuracy, wpm, className }) {
+function Results({ state, errors, accuracy, wpm, className }) {
   const stats = [
     { label: 'Errors', value: errors },
     { label: 'Accuracy', value: `${accuracy}%` },
     { label: 'WPM', value: wpm },
   ];
+
+  if (state !== 'finish')
+    return null;
 
   return (
     <div className={`bg-[#1a1a1a] border border-gray-700 p-6 rounded-xl shadow-md text-center max-w-3xl mx-auto ${className || ''}`}>
