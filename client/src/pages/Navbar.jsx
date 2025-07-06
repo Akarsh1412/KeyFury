@@ -1,20 +1,12 @@
-import { useEffect, useState } from 'react';
 import { Flame, LogIn } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../firebase'; // adjust the path if needed
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const { user } = useAuth();
 
   const handleLogout = async () => {
     await signOut(auth);

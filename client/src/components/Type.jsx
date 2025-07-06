@@ -2,7 +2,7 @@ import { useState } from 'react';
 import GenerateWords from './GenerateWords';
 import Timer from './Timer';
 import RestartButton from './RestartButton';
-import Results from './Results';
+import Results from '../pages/Results';
 import UserTypings from './UserTypings';
 import WordsContainer from './WordsContainer';
 import useEngine from '../hooks/useEngine';

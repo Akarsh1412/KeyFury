@@ -1,4 +1,4 @@
-function UserTypings({ userInput, ClassName, words }) {
+function UserTypings({ userInput, words }) {
   const typedCharacters = userInput.split('');
   return (
     <div className="absolute inset-0 text-white font-mono text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none">

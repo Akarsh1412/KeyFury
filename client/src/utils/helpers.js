@@ -33,3 +33,16 @@ export const isKeyboardCodeAllowed = (code) => {
     code === "Space"
   );
 };
+
+export const generateRoomId = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let id = '';
+    for (let i = 0; i < 6; i++) {
+      id += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return id;
+};
+
+export const formatTime = (timestamp) => {
+  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
