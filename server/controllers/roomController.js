@@ -59,8 +59,8 @@ export const leaveRoom = async (io, socket, { roomId, userId }) => {
   try {
     await redis.hdel(`room:${roomId}`, userId);    
     await redis.del(`user:${userId}:socket`);    
-    const players = await redis.hgetall(`room:${roomId}`);
-    if (Object.keys(players).length === 0) {
+    const players = await redis.hgetall(`room:${roomId}`) || [];
+    if (players.length === 0) {
       await redis.del(`room:${roomId}`);
       await redis.del(`room:${roomId}:leader`);
       await redis.del(`room:${roomId}:messages`);
