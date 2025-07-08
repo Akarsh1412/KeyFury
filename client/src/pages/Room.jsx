@@ -74,6 +74,18 @@ function Room() {
     });
   };
 
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('testStarted', () => {
+      navigate(`/multiplayer/test/${roomId}`);
+    });
+
+    return () => {
+      socket.off('testStarted');
+    };
+  }, [socket, roomId, navigate]);
+
   const handleLeaveRoom = () => {
     if (socket) {
       socket.emit('leaveRoom', { roomId, userId: user?.uid });
@@ -81,7 +93,6 @@ function Room() {
     navigate('/multiplayer');
   };
 
-  // Check if current user is room leader
   const isLeader = players.some(
     player => player.userId === user?.uid && player.isLeader
   );
@@ -89,7 +100,7 @@ function Room() {
   return (
     <div className="min-h-screen bg-[#121212] text-white flex justify-center items-start pt-10 px-4">
       <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-lg w-full max-w-4xl flex flex-col">
-        {/* Top Bar - Increased height and added Leave button */}
+        {/* Top Bar */}
         <div className="w-full px-6 py-5 border-b border-gray-700 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className="text-sm text-slate-400">
@@ -118,9 +129,8 @@ function Room() {
           </div>
         </div>
 
-        {/* Body - Increased height of chat container */}
         <div className="flex flex-col md:flex-row flex-1 min-h-[70vh]">
-          {/* Chat Window - Increased height */}
+          {/* Chat Window */}
           <div className="md:w-2/3 border-r border-gray-700 p-4 flex flex-col">
             <div className="bg-[#181818] rounded-md p-3 flex-1 flex flex-col">
               <Chat socket={socket} roomId={roomId} user={user} />
@@ -143,7 +153,7 @@ function Room() {
                   >
                     <span className="truncate max-w-[70%]">
                       {player.username}
-                      {player.isLeader && <span className="ml-2 text-xs bg-[#d32f2f] px-1 rounded">L</span>}
+                      {player.isLeader && <span className="ml-2 text-xs bg-[#d32f2f] px-1 rounded">Leader</span>}
                     </span>
                     {testStarted && (
                       <span className="text-xs bg-[#2a2a2a] px-2 py-1 rounded min-w-[50px] text-center">

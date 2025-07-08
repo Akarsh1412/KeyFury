@@ -1,7 +1,7 @@
-function UserTypings({ userInput, words }) {
+function UserTypings({ userInput, words, className }) {
   const typedCharacters = userInput.split('');
   return (
-    <div className="absolute inset-0 text-white font-mono text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none">
+    <div className={className}>
       {typedCharacters.map((char, index) => (
         <Character
           key={`${char}_${index}`}

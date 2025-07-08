@@ -1,6 +1,6 @@
-function GenerateWords({ words }) {
+function GenerateWords({ words, className }) {
   return (
-    <div className="text-slate-500 font-mono text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words select-none">
+    <div className={className}>
       {words}
     </div>
   );

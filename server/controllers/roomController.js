@@ -79,12 +79,11 @@ export const startTest = async (io, socket, { roomId, userId }) => {
 };
 
 export const updateStats = async (io, socket, { roomId, userId, wpm, progress }) => {
-  const playerData = await redis.hGet(`room:${roomId}`, userId);
+  const playerData = await redis.hget(`room:${roomId}`, userId);
   if (!playerData) return;
-  const parsed = JSON.parse(playerData);
-  parsed.wpm = wpm;
-  parsed.progress = progress;
-  await redis.hset(`room:${roomId}`, { [userId] : parsed });
+  playerData.wpm = wpm;
+  playerData.progress = progress;
+  await redis.hset(`room:${roomId}`, { [userId] : playerData });
   const players = await redis.hgetall(`room:${roomId}`);
   io.to(roomId).emit("liveStats", sortPlayersByProgress(players));
 };
@@ -111,6 +110,10 @@ export const chatMessage = async (io, socket, { roomId, userId, message }) => {
   } catch (err) {
     console.error("Error handling chat message:", err);
   }
+};
+
+export const endTest = async (io, socket, { roomId }) => {
+  io.to(roomId).emit("testEnded");
 };
 
 export const disconnect = async (io, socket) => {

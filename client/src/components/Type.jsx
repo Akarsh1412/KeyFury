@@ -10,7 +10,7 @@ import { calculateAccuracy, calculateWpm } from '../utils/helpers';
 
 function Type() {
   const [ timeLimit, setTimeLimit ] = useState(30);
-  const { state, words, timeLeft, typed, errors, restart, totalTyped } = useEngine(timeLimit);
+  const { state, words, timeLeft, typed, errors, restart, totalTyped } = useEngine(20, timeLimit, false);
 
   return (
     <div className="min-h-screen bg-[#121212] text-white px-6 py-12">
@@ -35,12 +35,16 @@ function Type() {
           </div>
         </div>
 
-        <WordsContainer>
+        <WordsContainer className="relative max-w-4xl mx-auto text-2xl md:text-3xl font-mono leading-relaxed break-words border border-gray-700 bg-[#1a1a1a] px-6 py-4 rounded-lg shadow-md min-h-[200px]">
           <div className="absolute inset-0">
-            <GenerateWords words={words} />
+            <GenerateWords
+              words={words}
+              className="text-slate-500 font-mono text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words select-none"
+            />
             <UserTypings
               userInput={typed}
               words={words}
+              className="absolute inset-0 text-white font-mono text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
             />
           </div>
         </WordsContainer>

@@ -15,6 +15,8 @@ import Signup from './pages/Signup.jsx';
 import Type from './components/Type.jsx';
 import Multiplayer from './components/Multiplayer.jsx';
 import Room from './pages/Room.jsx';
+import MultiplayerTest from './pages/MultiplayerTest.jsx';
+import MultiplayerResults from './pages/MultiplayerResults.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -39,6 +41,22 @@ const router = createBrowserRouter(
           <ProtectedRoute>
             <Room />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="multiplayer/test/:roomId"
+        element={
+          <ProtectedRoute>
+            <MultiplayerTest />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="multiplayer/results/:roomId"
+        element={
+        <ProtectedRoute>
+          <MultiplayerResults />
+        </ProtectedRoute>
         }
       />
     </Route>

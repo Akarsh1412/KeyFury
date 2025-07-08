@@ -4,11 +4,9 @@ import useWords from "./useWords";
 import useTypings from "./useTypings";
 import { countErrors } from "../utils/helpers";
 
-const NUMBER_OF_WORDS = 20;
-
-const useEngine = (countDownSeconds) => {
+const useEngine = (numberOfWords, countDownSeconds, isMultiplayer) => {
   const [ state, setState ] = useState("start");
-  const { words, updateWords } = useWords(NUMBER_OF_WORDS);
+  const { words, updateWords } = useWords(numberOfWords);
   const { timeLeft, startCountDown, resetCountDown } = useCountDownTimer(countDownSeconds);
 
   const { typed, cursor, totalTyped, clearTyped, resetTotalTyped } = useTypings(state !== "finish");
@@ -25,11 +23,18 @@ const useEngine = (countDownSeconds) => {
 
   // When User starts typing
   useEffect(() => {
-    if (isStarting) {
+    if (isMultiplayer && state === "start") {
       setState("run");
       startCountDown();
     }
-  }, [isStarting, startCountDown])
+  }, [isMultiplayer, state, startCountDown]);
+
+  useEffect(() => {
+    if (!isMultiplayer && isStarting) {
+      setState("run");
+      startCountDown();
+    }
+  }, [isStarting, startCountDown, isMultiplayer])
 
   // When Times up 
   useEffect(() => {
@@ -42,13 +47,13 @@ const useEngine = (countDownSeconds) => {
 
   // When User finishes typing all words
   useEffect(() => {
-    if (areWordsFinished) {
+    if (!isMultiplayer && areWordsFinished) {
       console.log("All words typed!");
       sumErrors();
       updateWords();
       clearTyped();
     }
-  }, [ clearTyped, areWordsFinished, updateWords, sumErrors]);
+  }, [ clearTyped, areWordsFinished, updateWords, sumErrors, isMultiplayer]);
 
   const restart = useCallback(() => {
     console.log("Restarting...");
