@@ -85,9 +85,6 @@ export const updateStats = async (io, socket, { roomId, userId, wpm, progress })
   playerData.progress = progress;
   await redis.hset(`room:${roomId}`, { [userId] : playerData });
   const players = await redis.hgetall(`room:${roomId}`);
-  const db = players.map(p => p);
-  console.log(db);
-
   io.to(roomId).emit("liveStats", sortPlayersByProgress(players));
 };
 
