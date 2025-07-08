@@ -46,3 +46,8 @@ export const generateRoomId = () => {
 export const formatTime = (timestamp) => {
   return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
+
+export const calculateRealTimeErrors = (typed, words, cursor) => {
+  const wordsReached = words.substring(0, Math.min(cursor, words.length));
+  return countErrors(typed, wordsReached);
+};

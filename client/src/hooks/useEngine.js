@@ -55,6 +55,14 @@ const useEngine = (numberOfWords, countDownSeconds, isMultiplayer) => {
     }
   }, [ clearTyped, areWordsFinished, updateWords, sumErrors, isMultiplayer]);
 
+  useEffect(() => {
+    if (isMultiplayer && areWordsFinished) {
+      console.log("All words typed!");
+      setState('finish');
+      sumErrors();
+    }
+  }, [ clearTyped, areWordsFinished, updateWords, sumErrors, isMultiplayer]);
+
   const restart = useCallback(() => {
     console.log("Restarting...");
     resetCountDown();

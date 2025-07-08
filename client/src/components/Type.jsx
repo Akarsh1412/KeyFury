@@ -57,7 +57,7 @@ function Type() {
           state={state}
           errors={errors}
           accuracy={calculateAccuracy(errors, totalTyped)}
-          wpm={calculateWpm(totalTyped-errors, timeLimit-timeLeft)}
+          wpm={calculateWpm(totalTyped-errors, timeLimit)}
           timeLimit={timeLimit}
         />
       </div>

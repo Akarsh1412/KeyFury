@@ -7,7 +7,7 @@ import { Timer } from "lucide-react";
 import WordsContainer from "../components/WordsContainer";
 import GenerateWords from "../components/GenerateWords";
 import UserTypings from "../components/UserTypings";
-import { calculateWpm } from "../utils/helpers";
+import { calculateRealTimeErrors, calculateWpm } from "../utils/helpers";
 
 function MultiplayerTest() {
   const timeLimit = 140;
@@ -16,7 +16,7 @@ function MultiplayerTest() {
   const { socket } = useSocket();
   const navigate = useNavigate();
 
-  const { words, timeLeft, typed, errors, totalTyped } = useEngine(100, timeLimit, true);
+  const { state, words, timeLeft, typed, errors, totalTyped } = useEngine(100, timeLimit, true);
 
   const [players, setPlayers] = useState([]);
   const [wpm, setWpm] = useState(0);
@@ -42,9 +42,13 @@ function MultiplayerTest() {
 
   // Local stats (WPM, progress), sync to server
   useEffect(() => {
-    if (totalTyped === 0) return;
+    if (totalTyped === 0 || state === 'finish') return; 
     
-    const nextWpm = calculateWpm(totalTyped-errors, timeLimit-timeLeft);
+    const currentErrors = calculateRealTimeErrors(typed, words, typed.length);
+    const correctCharacters = totalTyped - currentErrors;
+    const timeElapsed = timeLimit - timeLeft;
+
+    const nextWpm = calculateWpm(correctCharacters, timeElapsed);
     const progressPercentage = Math.min(100, (typed.length / words.length) * 100);
 
     setWpm(nextWpm);
@@ -54,7 +58,7 @@ function MultiplayerTest() {
       roomId,
       userId: user.uid,
       wpm: nextWpm,
-      progress: progressPercentage,
+      progress: progressPercentage
     });
 
   }, [totalTyped, socket, roomId, user, timeLeft]);
