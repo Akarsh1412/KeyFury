@@ -99,9 +99,9 @@ function Room() {
 
   return (
     <div className="min-h-screen bg-[#121212] text-white flex justify-center items-start pt-10 px-4">
-      <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-lg w-full max-w-4xl flex flex-col">
+      <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-lg w-full max-w-4xl flex flex-col h-[calc(90vh-5rem)]">
         {/* Top Bar */}
-        <div className="w-full px-6 py-5 border-b border-gray-700 flex justify-between items-center">
+        <div className="w-full px-6 py-5 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="text-sm text-slate-400">
               Logged in as: <span className="text-white font-medium">{currentUser}</span>
@@ -129,19 +129,19 @@ function Room() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row flex-1 min-h-[70vh]">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* Chat Window */}
-          <div className="md:w-2/3 border-r border-gray-700 p-4 flex flex-col">
-            <div className="bg-[#181818] rounded-md p-3 flex-1 flex flex-col">
+          <div className="md:w-2/3 border-r border-gray-700 p-4 flex flex-col min-h-0">
+            <div className="bg-[#181818] rounded-md p-3 flex-1 flex flex-col min-h-0" style={{ height: '100%' }}>
               <Chat socket={socket} roomId={roomId} user={user} />
             </div>
           </div>
 
           {/* Players List & Start Button */}
-          <div className="md:w-1/3 p-4 flex flex-col justify-between">
-            <div>
+          <div className="md:w-1/3 p-4 flex flex-col justify-between min-h-0">
+            <div className="flex-1 overflow-hidden">
               <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Players ({players.length})</h3>
-              <ul className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+              <ul className="space-y-2 max-h-[calc(100%-4rem)] overflow-y-auto custom-scrollbar">
                 {players.map((player) => (
                   <li
                     key={player.userId}
@@ -151,7 +151,7 @@ function Room() {
                         : 'bg-[#1f1f1f] border-gray-700'
                     } flex justify-between items-center`}
                   >
-                    <span className="truncate max-w-[70%]">
+                    <span className="truncate max-w-[70%]" style={{ wordBreak: 'break-word' }}>
                       {player.username}
                       {player.isLeader && <span className="ml-2 text-xs bg-[#d32f2f] px-1 rounded">Leader</span>}
                     </span>
@@ -165,7 +165,7 @@ function Room() {
               </ul>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 flex-shrink-0">
               {isLeader && !testStarted && (
                 <button
                   onClick={handleStart}
