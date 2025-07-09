@@ -15,11 +15,21 @@ const useEngine = (numberOfWords, countDownSeconds, isMultiplayer) => {
 
   const isStarting = state === "start" && cursor > 0;
   const areWordsFinished = cursor === words.length;
-  
-  const sumErrors = useCallback(() => {
-    const wordsReached = words.substring(0, Math.min(cursor, words.length));
-    setErrors ((prevErrors) => prevErrors + countErrors(typed, wordsReached));
-  }, [words, typed, cursor]);
+
+  // Calculate real-time errors
+  const calculateRealTimeErrors = useCallback(() => {
+    if (typed.length === 0) return 0;
+    const wordsReached = words.substring(0, Math.min(typed.length, words.length));
+    return countErrors(typed, wordsReached);
+  }, [words, typed]);
+
+  // Errors in real-time
+  useEffect(() => {
+    if (state === "run" && typed.length > 0) {
+      const currentErrors = calculateRealTimeErrors();
+      setErrors(currentErrors);
+    }
+  }, [typed, state, calculateRealTimeErrors]);
 
   // When User starts typing
   useEffect(() => {
@@ -41,27 +51,24 @@ const useEngine = (numberOfWords, countDownSeconds, isMultiplayer) => {
     if (!timeLeft && state === "run") {
       console.log("Time's up!");
       setState("finish");
-      sumErrors();
     }
-  }, [timeLeft, sumErrors, state])
+  }, [timeLeft, state])
 
   // When User finishes typing all words
   useEffect(() => {
     if (!isMultiplayer && areWordsFinished) {
       console.log("All words typed!");
-      sumErrors();
       updateWords();
       clearTyped();
     }
-  }, [ clearTyped, areWordsFinished, updateWords, sumErrors, isMultiplayer]);
+  }, [ clearTyped, areWordsFinished, updateWords, isMultiplayer]);
 
   useEffect(() => {
     if (isMultiplayer && areWordsFinished) {
       console.log("All words typed!");
       setState('finish');
-      sumErrors();
     }
-  }, [ clearTyped, areWordsFinished, updateWords, sumErrors, isMultiplayer]);
+  }, [ clearTyped, areWordsFinished, updateWords, isMultiplayer]);
 
   const restart = useCallback(() => {
     console.log("Restarting...");
