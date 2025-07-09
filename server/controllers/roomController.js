@@ -165,10 +165,9 @@ export const updateStats = async (
 
 export const chatMessage = async (io, socket, { roomId, userId, message }) => {
   try {
-    const playerDataStr = await redis.hget(`room:${roomId}`, userId);
-    if (!playerDataStr) return;
+    const playerData = await redis.hget(`room:${roomId}`, userId);
+    if (!playerData) return;
 
-    const playerData = JSON.parse(playerDataStr);
     const { username } = playerData;
     const cleanMessage = message;
     const messageData = {
