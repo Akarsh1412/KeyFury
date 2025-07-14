@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import GenerateWords from './GenerateWords';
 import Timer from './Timer';
 import RestartButton from './RestartButton';
@@ -9,12 +11,35 @@ import useEngine from '../hooks/useEngine';
 import { calculateAccuracy, calculateWpm } from '../utils/helpers';
 
 function Type() {
-  const [ timeLimit, setTimeLimit ] = useState(30);
-  const { state, words, timeLeft, typed, errors, restart, totalTyped } = useEngine(20, timeLimit, false);
+  const [timeLimit, setTimeLimit] = useState(30);
+  const navigate = useNavigate();
+  
+  const { state, words, timeLeft, typed, errors, restart, totalTyped } = useEngine(
+    20,
+    timeLimit,
+    false,
+    null,      
+    null       
+  );
+
+  const handleBackToHome = () => {
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-[#121212] text-white px-6 py-12">
       <div className="max-w-5xl mx-auto space-y-10">
+        {/* Back button */}
+        <div className="flex justify-start">
+          <button
+            onClick={handleBackToHome}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-300 rounded-lg hover:bg-[#2a2a2a] hover:border-gray-600 hover:text-white transition-all duration-300"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </button>
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <Timer timeLeft={timeLeft} />
           

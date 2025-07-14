@@ -1,5 +1,6 @@
 import redis from "../redis/redisClient.js";
 import { sortPlayersByProgress } from "../utils/helpers.js";
+import { addActiveRoom, removeActiveRoom } from "../server.js";
 
 const ROOM_TTL = 60 * 15;
 
@@ -81,7 +82,9 @@ export const leaveRoom = async (io, socket, { roomId, userId }) => {
       await redis.del(`room:${roomId}`);
       await redis.del(`room:${roomId}:leader`);
       await redis.del(`room:${roomId}:messages`);
-      await redis.del(`room:${roomId}:testStartTime`);
+
+      // Remove from active tracking when room is deleted
+      removeActiveRoom(roomId);
     } else {
       io.to(roomId).emit("roomUpdate", sortPlayersByProgress(playersData));
     }
@@ -94,10 +97,55 @@ export const startTest = async (io, socket, { roomId, userId }) => {
   const leaderId = await redis.get(`room:${roomId}:leader`);
   if (leaderId !== userId) return;
 
-  // Store test start time
-  await redis.set(`room:${roomId}:testStartTime`, Date.now());
+  // Start the 5-second countdown
+  io.to(roomId).emit("gameStarting", { countdown: 5 });
 
-  io.to(roomId).emit("testStarted");
+  let countdown = 5;
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      io.to(roomId).emit("countdownUpdate", { countdown });
+    } else {
+      clearInterval(countdownInterval);
+
+      const startTime = Date.now();
+      redis.set(`room:${roomId}:testStartTime`, startTime);
+      addActiveRoom(roomId);
+
+      io.to(roomId).emit("testStarted", {
+        startTime
+      });
+
+      setTimeout(() => {
+        io.to(roomId).emit("testEnded", { reason: "time_up" });
+        removeActiveRoom(roomId);
+      }, 140000);
+    }
+  }, 1000);
+};
+
+export const broadcastTimerSync = async (io, roomId) => {
+  try {
+    const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
+    const testDuration = 140;
+
+    if (!testStartTime) return;
+
+    const timeElapsed = Math.floor(
+      (Date.now() - parseInt(testStartTime)) / 1000
+    );
+    const timeLeft = Math.max(0, testDuration - timeElapsed);
+
+    if (timeLeft > 0) {
+      io.to(roomId).emit("timerSync", {
+        timeLeft,
+        isRunning: true,
+        serverTime: Date.now(),
+      });
+    }
+  } catch (err) {
+    console.error("Error broadcasting timer sync:", err);
+  }
 };
 
 export const updateStats = async (
@@ -114,12 +162,10 @@ export const updateStats = async (
       ? Math.floor((Date.now() - parseInt(testStartTime)) / 1000)
       : 0;
 
-    // Update player stats
     playerData.wpm = wpm;
     playerData.progress = progress;
     playerData.accuracy = accuracy;
 
-    // Add to performance history
     playerData.performanceHistory.push({
       time: timeElapsed,
       wpm,
@@ -135,7 +181,6 @@ export const updateStats = async (
 
     await redis.hset(`room:${roomId}`, { [userId]: playerData });
 
-    // Get all players to check completion status
     const playersData = await redis.hgetall(`room:${roomId}`);
     const players = Object.entries(playersData).map(([userId, playerData]) => {
       return {
@@ -182,6 +227,33 @@ export const chatMessage = async (io, socket, { roomId, userId, message }) => {
     await redis.ltrim(`room:${roomId}:messages`, 0, 20);
   } catch (err) {
     console.error("Error handling chat message:", err);
+  }
+};
+
+export const getTimerSync = async (io, socket, { roomId }) => {
+  try {
+    const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
+    const testDuration = 140;
+
+    if (!testStartTime) {
+      return socket.emit("timerSync", {
+        timeLeft: testDuration,
+        isRunning: false,
+      });
+    }
+
+    const timeElapsed = Math.floor(
+      (Date.now() - parseInt(testStartTime)) / 1000
+    );
+    const timeLeft = Math.max(0, testDuration - timeElapsed);
+
+    socket.emit("timerSync", {
+      timeLeft,
+      isRunning: timeLeft > 0,
+      serverTime: Date.now(),
+    });
+  } catch (err) {
+    console.error("Error syncing timer:", err);
   }
 };
 

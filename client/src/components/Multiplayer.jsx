@@ -1,4 +1,4 @@
-import { PlusCircle, LogIn } from 'lucide-react';
+import { PlusCircle, LogIn, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateRoomId } from '../utils/helpers';
@@ -38,6 +38,11 @@ function Multiplayer() {
     }
   };
 
+  const handleJoinSubmit = (e) => {
+    e.preventDefault();
+    handleJoin();
+  };
+
   const handleCreate = () => {
     try {
       const newRoomId = generateRoomId();
@@ -69,48 +74,70 @@ function Multiplayer() {
     }
   };
 
-  return (
-    <section className="min-h-screen bg-[#121212] flex items-center justify-center px-4 py-24">
-      <div className="bg-[#1a1a1a] border border-gray-700 rounded-2xl shadow-xl w-full max-w-xl p-8">
-        <h1 className="text-4xl font-extrabold text-white text-center mb-8">
-          Multiplayer
-        </h1>
+  const handleBackToHome = () => {
+    navigate('/');
+  };
 
-        <div className="space-y-8">
-          {/* Join Room */}
-          <div>
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <input
-                type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-                placeholder="Enter Room Code"
-                className="flex-1 px-4 py-2 rounded-md bg-[#0e0e0e] border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#d32f2f]"
-              />
+  return (
+    <section className="bg-[#121212] flex items-center justify-center px-4 py-8 min-h-[calc(100vh-120px)]">
+      <div className="w-full max-w-xl">
+        {/* Back button */}
+        <div className="flex justify-start mb-6">
+          <button
+            onClick={handleBackToHome}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-300 rounded-lg hover:bg-[#2a2a2a] hover:border-gray-600 hover:text-white transition-all duration-300"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </button>
+        </div>
+
+        <div className="bg-[#1a1a1a] border border-gray-700 rounded-2xl shadow-xl p-8">
+          <h1 className="text-4xl font-extrabold text-white text-center mb-8">
+            Multiplayer
+          </h1>
+
+          <div className="space-y-8">
+            {/* Join Room Form */}
+            <div>
+              <form onSubmit={handleJoinSubmit} className="flex flex-col md:flex-row items-center gap-4">
+                <input
+                  type="text"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value)}
+                  placeholder="Enter Room Code"
+                  className="flex-1 px-4 py-3 rounded-md bg-[#0e0e0e] border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] transition-all"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-[#d32f2f] text-white px-6 py-3 rounded-md hover:bg-[#b71c1c] transition text-sm font-medium min-w-[100px] justify-center"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Join
+                </button>
+              </form>
+            </div>
+
+            {/* Divider */}
+            <div className="relative text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-[#1a1a1a] px-4 text-slate-400">or</span>
+              </div>
+            </div>
+
+            {/* Create Room */}
+            <div className="text-center">
               <button
-                onClick={handleJoin}
-                className="flex items-center gap-2 bg-[#d32f2f] text-white px-4 py-2 rounded-md hover:bg-[#b71c1c] transition text-sm font-medium"
+                onClick={handleCreate}
+                className="inline-flex items-center gap-2 bg-[#1f1f1f] border border-gray-600 text-white px-6 py-3 rounded-md hover:bg-[#2a2a2a] hover:border-[#d32f2f] transition text-sm font-medium"
               >
-                <LogIn className="w-4 h-4" />
-                Join
+                <PlusCircle className="w-4 h-4 text-[#ef4444]" />
+                Create New Room
               </button>
             </div>
-          </div>
-
-          {/* Divider */}
-          <div className="relative text-center">
-            <span className="text-slate-600 text-sm">or</span>
-          </div>
-
-          {/* Create Room */}
-          <div className="text-center">
-            <button
-              onClick={handleCreate}
-              className="inline-flex items-center gap-2 bg-[#1f1f1f] border border-gray-600 text-white px-5 py-2 rounded-md hover:bg-[#2a2a2a] hover:border-[#d32f2f] transition text-sm font-medium"
-            >
-              <PlusCircle className="w-4 h-4 text-[#ef4444]" />
-              Create New Room
-            </button>
           </div>
         </div>
       </div>

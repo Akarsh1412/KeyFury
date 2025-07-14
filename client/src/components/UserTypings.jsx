@@ -10,7 +10,7 @@ function UserTypings({ userInput, words, className }) {
         />
       ))}
       {/* Caret */}
-      <span className="inline-block w-0.5 h-7 align-middle bg-white animate-pulse ml-0.5" />
+      <span className="inline-block w-0.5 h-7 align-middle bg-white animate-pulse -ml-0.8" />
     </div>
   );
 }

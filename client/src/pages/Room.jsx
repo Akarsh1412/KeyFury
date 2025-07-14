@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; 
 import { Copy, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/socketContext';
 import Chat from '../components/Chat';
 import { toast } from 'react-toastify';
+import CountdownModal from '../components/CountDownModal';
 
 function Room() {
   const { roomId } = useParams();
@@ -16,6 +17,9 @@ function Room() {
   const [currentUser, setCurrentUser] = useState('');
   const [players, setPlayers] = useState([]);
   const [testStarted, setTestStarted] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const isRedirectingToTest = useRef(false);
 
   // Join room and listen for updates
   useEffect(() => {
@@ -33,22 +37,44 @@ function Room() {
       setPlayers(playerData);
     });
 
+    return () => {
+      socket.off('roomUpdate');
+    };
+  }, [socket, user, roomId]);
+
+  // Handle countdown and test start events
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('gameStarting', ({ countdown }) => {
+      setShowCountdown(true);
+      setCountdown(countdown);
+    });
+
+    socket.on('countdownUpdate', ({ countdown }) => {
+      setCountdown(countdown);
+    });
+
     socket.on('testStarted', () => {
       setTestStarted(true);
+      setShowCountdown(false);
+      isRedirectingToTest.current = true;
+      navigate(`/multiplayer/test/${roomId}`);
     });
 
     return () => {
-      socket.off('roomUpdate');
+      socket.off('gameStarting');
+      socket.off('countdownUpdate');
       socket.off('testStarted');
     };
-  }, [socket, user, roomId]);
+  }, [socket, roomId, navigate]);
 
   // Handle "room not found" errors
   useEffect(() => {
     if (!socket) return;
 
     socket.on('error', (msg) => {
-      alert(msg);
+      toast.error(msg);
       navigate('/multiplayer');
     });
 
@@ -57,10 +83,35 @@ function Room() {
     };
   }, [socket, navigate]);
 
+  // Handle leaving room when component unmounts (except when redirecting to test)
+  useEffect(() => {
+    return () => {
+      // Only leave room if not redirecting to test
+      if (!isRedirectingToTest.current && socket && user) {
+        socket.emit('leaveRoom', { roomId, userId: user.uid });
+      }
+    };
+  }, [socket, user, roomId]);
+
+  // Handle browser tab close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (socket && user && !isRedirectingToTest.current) {
+        socket.emit('leaveRoom', { roomId, userId: user.uid });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [socket, user, roomId]);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
-      toast.success("Room ID copied!",{
+      toast.success("Room ID copied!", {
         autoClose: 1500
       });
       setCopied(true);
@@ -78,18 +129,6 @@ function Room() {
     });
   };
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('testStarted', () => {
-      navigate(`/multiplayer/test/${roomId}`);
-    });
-
-    return () => {
-      socket.off('testStarted');
-    };
-  }, [socket, roomId, navigate]);
-
   const handleLeaveRoom = () => {
     if (socket) {
       socket.emit('leaveRoom', { roomId, userId: user?.uid });
@@ -103,6 +142,8 @@ function Room() {
 
   return (
     <div className="min-h-screen bg-[#121212] text-white flex justify-center items-start pt-10 px-4">
+      {showCountdown && <CountdownModal countDown={countdown} />}
+
       <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-lg w-full max-w-4xl flex flex-col h-[calc(90vh-5rem)]">
         {/* Top Bar */}
         <div className="w-full px-6 py-5 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
@@ -170,13 +211,20 @@ function Room() {
             </div>
 
             <div className="mt-4 flex-shrink-0">
-              {isLeader && !testStarted && (
+              {isLeader && !testStarted && !showCountdown && (
                 <button
                   onClick={handleStart}
                   className="w-full bg-[#d32f2f] hover:bg-[#b71c1c] text-white py-3 rounded-md font-medium transition text-lg"
                 >
                   Start Game
                 </button>
+              )}
+              
+              {showCountdown && (
+                <div className="w-full text-center py-4 bg-[#1f1f1f] rounded-md border border-gray-700">
+                  <p className="text-[#ef4444] font-medium text-lg">Starting in {countdown}...</p>
+                  <p className="text-sm text-slate-400 mt-2">Get ready to type!</p>
+                </div>
               )}
               
               {testStarted && (

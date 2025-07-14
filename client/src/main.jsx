@@ -64,11 +64,11 @@ const router = createBrowserRouter(
 );
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <AuthProvider>
       <SocketProvider>
         <RouterProvider router={router} />
       </SocketProvider>
     </AuthProvider>
-  </StrictMode>
+  // </StrictMode>
 );

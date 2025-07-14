@@ -1,4 +1,4 @@
-import { Zap, Users, ArrowRight, Github } from "lucide-react";
+import { Zap, Users, ArrowRight, Github, MessageCircle, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -12,10 +12,10 @@ function Home() {
   const [message, setMessage] = useState("");
 
   const phrases = [
-    "Multiplayer Typing Battles",
-    "Real-Time Analytics and Leaderboards",
-    "Track Your Accuracy and WPM",
-    "Improve Your Typing with Smart Insights",
+    "Improve your typing speed",
+    "Challenge friends online",
+    "Track your progress",
+    "Master the keyboard",
   ];
 
   useEffect(() => {
@@ -40,10 +40,7 @@ function Home() {
 
   const handleFeedbackSubmit = (e) => {
     e.preventDefault();
-    console.log("FeedBack Received....");
-    
     toast.success("Thanks for your feedback!");
-
     setEmail("");
     setMessage("");
   };
@@ -51,152 +48,228 @@ function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-24 bg-[#121212]">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-white">
-            Welcome to <span className="text-[#ef4444]">KeyFury</span>
+      <section className="py-32 bg-[#121212] relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#ef4444]/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#ef4444]/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white animate-fade-in">
+            <span className="text-[#ef4444] hover:text-[#dc2626] transition-colors duration-300">
+              KeyFury
+            </span>
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-6">
+          
+          <div className="text-xl md:text-2xl text-gray-300 mb-8 h-8 animate-fade-in-delay">
             {typingText}
-            <span className="ml-1 w-1 h-5 bg-[#ef4444] inline-block animate-pulse"></span>
+            <span className="ml-1 w-0.5 h-6 bg-[#ef4444] inline-block animate-pulse"></span>
+          </div>
+          
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-12 animate-fade-in-delay-2">
+            A clean, fast typing test with real-time analytics and multiplayer challenges.
           </p>
-          <p className="text-slate-400 max-w-xl mx-auto mb-8">
-            KeyFury is a competitive multiplayer typing game that helps you
-            boost your typing speed and accuracy while analyzing your real-time
-            performance.
-          </p>
-          <div className="flex justify-center gap-4">
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-delay-3">
             <Link
               to="/type"
-              className="flex items-center gap-2 bg-[#d32f2f] text-white px-6 py-3 rounded-md hover:bg-[#b71c1c] transition font-medium"
+              className="group flex items-center justify-center gap-2 bg-[#ef4444] text-white px-8 py-4 rounded-lg hover:bg-[#dc2626] transition-all duration-300 font-medium text-lg transform hover:scale-105 hover:shadow-lg"
             >
-              <Zap className="w-5 h-5" />
-              Start Typing
-              <ArrowRight className="w-4 h-4" />
+              <Zap className="w-5 h-5 group-hover:animate-pulse" />
+              Start Typing Test
             </Link>
             <Link
               to="/multiplayer"
-              className="flex items-center gap-2 px-6 py-3 rounded-md border border-gray-600 text-slate-300 hover:bg-[#1f1f1f] transition"
+              className="group flex items-center justify-center gap-2 px-8 py-4 rounded-lg border border-gray-600 text-gray-300 hover:bg-[#1f1f1f] hover:border-[#ef4444] transition-all duration-300 font-medium text-lg transform hover:scale-105"
             >
-              <Users className="w-5 h-5" />
-              Join Multiplayer
+              <Users className="w-5 h-5 group-hover:text-[#ef4444] transition-colors" />
+              Multiplayer Mode
             </Link>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-[#0e0e0e]">
+      <section className="py-20 bg-[#0f0f0f]">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Why KeyFury?
+          <h2 className="text-3xl font-bold text-center text-white mb-16 animate-fade-in-up">
+            Everything you need to improve your typing
           </h2>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: "Real-Time Analytics",
-                desc: "Track your words per minute and accuracy as you type, live.",
+                icon: Zap,
+                title: "Real-time Stats",
+                desc: "Track your WPM, accuracy, and progress as you type",
+                delay: "delay-100"
               },
               {
-                title: "Competitive Multiplayer",
-                desc: "Race against others and climb the global leaderboard.",
+                icon: Users,
+                title: "Multiplayer",
+                desc: "Race against friends and compete on leaderboards",
+                delay: "delay-200"
               },
               {
-                title: "Intelligent Insights",
-                desc: "Identify your weak spots with smart recommendations and feedback.",
-              },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="bg-[#1a1a1a] border border-gray-700 p-6 rounded-lg shadow-md hover:shadow-lg transition"
+                icon: MessageCircle,
+                title: "Clean Interface",
+                desc: "Distraction-free design focused on your typing experience",
+                delay: "delay-300"
+              }
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                className={`group text-center p-6 animate-fade-in-up ${feature.delay} hover:transform hover:scale-105 transition-all duration-300`}
               >
-                <h3 className="font-semibold text-lg text-white mb-2">
+                <div className="w-16 h-16 bg-[#ef4444] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#dc2626] group-hover:shadow-lg transition-all duration-300 group-hover:rotate-3">
+                  <feature.icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-[#ef4444] transition-colors duration-300">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-slate-400">{feature.desc}</p>
+                <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                  {feature.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* GitHub CTA */}
+      {/* GitHub Section */}
       <section className="py-16 bg-[#121212]">
         <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-2xl font-bold text-white mb-3">
-            View KeyFury on GitHub
+          <h2 className="text-2xl font-bold text-white mb-4 animate-fade-in-up">
+            Open Source
           </h2>
-          <p className="text-slate-400 mb-6">
-            Dive into the code, star the project, or contribute your own
-            enhancements.
+          <p className="text-gray-400 mb-8 animate-fade-in-up delay-100">
+            KeyFury is open source. View the code, contribute, or report issues on GitHub.
           </p>
           <a
             href="https://github.com/Akarsh1412/KeyFury"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition"
+            className="group inline-flex items-center gap-2 px-6 py-3 bg-[#1f1f1f] border border-gray-600 text-white rounded-lg hover:bg-[#2a2a2a] hover:border-[#ef4444] transition-all duration-300 transform hover:scale-105 animate-fade-in-up delay-200"
           >
-            <Github className="w-5 h-5" />
-            GitHub Repository
+            <Github className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+            View on GitHub
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
           </a>
         </div>
       </section>
 
-      {/* Feedback Section */}
-      <section className="py-20 bg-[#0e0e0e]">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            We’d Love Your Feedback
-          </h2>
-          <p className="text-slate-400 mb-10">
-            Help us make KeyFury better! Share your thoughts, suggestions, or
-            report bugs.
-          </p>
+      {/* Enhanced Feedback Section */}
+      <section className="py-20 bg-[#0f0f0f]">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4 animate-fade-in-up">
+              Feedback
+            </h2>
+            <p className="text-gray-400 animate-fade-in-up delay-100">
+              Help us improve KeyFury with your suggestions and feedback.
+            </p>
+          </div>
 
-          <form onSubmit={handleFeedbackSubmit} className="space-y-6 text-left">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-slate-300 text-sm">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="px-4 py-3 rounded-md bg-[#1a1a1a] border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
-              />
-            </div>
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl p-8 hover:border-gray-600 transition-all duration-300 animate-fade-in-up delay-200">
+            <form onSubmit={handleFeedbackSubmit} className="space-y-6">
+              <div className="group">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-[#ef4444] transition-colors duration-300">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:border-transparent transition-all duration-300 hover:border-gray-500"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="message" className="text-slate-300 text-sm">
-                Your Feedback
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                rows="5"
-                required
-                placeholder="Your message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="px-4 py-3 rounded-md bg-[#1a1a1a] border border-gray-600 text-white resize-none focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
-              ></textarea>
-            </div>
+              <div className="group">
+                <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-[#ef4444] transition-colors duration-300">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  rows="4"
+                  required
+                  placeholder="Your feedback..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-600 text-white rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#ef4444] focus:border-transparent transition-all duration-300 hover:border-gray-500"
+                />
+              </div>
 
-            <div className="text-right">
               <button
                 type="submit"
-                className="px-6 py-3 bg-[#d32f2f] text-white rounded-md hover:bg-[#b71c1c] transition font-medium w-full sm:w-auto"
+                className="group w-full flex items-center justify-center gap-2 bg-[#ef4444] text-white py-3 rounded-lg hover:bg-[#dc2626] transition-all duration-300 font-medium transform hover:scale-105 hover:shadow-lg"
               >
-                Submit
+                <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                Send Feedback
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </section>
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+
+        .animate-fade-in-delay {
+          animation: fade-in 0.8s ease-out 0.2s both;
+        }
+
+        .animate-fade-in-delay-2 {
+          animation: fade-in 0.8s ease-out 0.4s both;
+        }
+
+        .animate-fade-in-delay-3 {
+          animation: fade-in 0.8s ease-out 0.6s both;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out;
+        }
+
+        .delay-100 {
+          animation-delay: 0.1s;
+        }
+
+        .delay-200 {
+          animation-delay: 0.2s;
+        }
+
+        .delay-300 {
+          animation-delay: 0.3s;
+        }
+      `}</style>
     </>
   );
 }

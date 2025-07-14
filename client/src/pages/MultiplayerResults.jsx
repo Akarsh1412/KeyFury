@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/socketContext";
@@ -12,7 +12,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Trophy, Clock, Target, Zap, ArrowLeft, LogOut } from "lucide-react";
+import { Trophy, Target, Zap, ArrowLeft, LogOut } from "lucide-react";
+import LoadingScreen from "../components/LoadingScreen";
 
 function MultiplayerResults() {
   const { roomId } = useParams();
@@ -23,6 +24,7 @@ function MultiplayerResults() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("wpm");
+  const isGoingBackToRoom = useRef(false); 
 
   // Fetch results on component mount
   useEffect(() => {
@@ -40,7 +42,32 @@ function MultiplayerResults() {
     };
   }, [socket, user, roomId]);
 
+  useEffect(() => {
+    return () => {
+      // Only leave room if not going back to room
+      if (!isGoingBackToRoom.current && socket && user) {
+        socket.emit('leaveRoom', { roomId, userId: user.uid });
+      }
+    };
+  }, [socket, user, roomId]);
+
+  // Handle browser tab close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (socket && user && !isGoingBackToRoom.current) {
+        socket.emit('leaveRoom', { roomId, userId: user.uid });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [socket, user, roomId]);
+
   const handleBackToRoom = () => {
+    isGoingBackToRoom.current = true;
     navigate(`/multiplayer/join/${roomId}`);
   };
 
@@ -53,12 +80,10 @@ function MultiplayerResults() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ef4444] mx-auto mb-4"></div>
-          <p className="text-lg">Loading results...</p>
-        </div>
-      </div>
+      <LoadingScreen
+        message="Loading Results" 
+        subtitle="Did You Finish First ??"  
+      />
     );
   }
 
@@ -89,9 +114,7 @@ function MultiplayerResults() {
     return b.finalWpm - a.finalWpm;
   });
 
-  // Prepare data for charts
   const getChartData = () => {
-    // Extract all time points from all players
     const allTimes = results.players.flatMap((p) =>
       p.performanceHistory.map((h) => h.time)
     );
@@ -106,13 +129,11 @@ function MultiplayerResults() {
       const dataPoint = { time };
 
       results.players.forEach((player) => {
-        // Find the closest data point <= current time
         let closestData = player.performanceHistory
           .slice()
           .reverse()
           .find((h) => h.time <= time);
 
-        // If no data found, use the first entry
         if (!closestData && player.performanceHistory.length > 0) {
           closestData = player.performanceHistory[0];
         }

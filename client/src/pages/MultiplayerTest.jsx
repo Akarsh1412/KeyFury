@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/socketContext";
 import useEngine from "../hooks/useEngine";
-import { Timer, Clock, Users } from "lucide-react";
+import { Timer, Clock } from "lucide-react";
 import WordsContainer from "../components/WordsContainer";
 import GenerateWords from "../components/GenerateWords";
 import UserTypings from "../components/UserTypings";
@@ -15,7 +15,7 @@ import {
 
 function MultiplayerTest() {
   const timeLimit = 140;
-  const wordLimit = 100;
+  const wordLimit = 20;
   const { roomId } = useParams();
   const { user } = useAuth();
   const { socket } = useSocket();
@@ -24,7 +24,9 @@ function MultiplayerTest() {
   const { state, words, timeLeft, typed, errors, totalTyped } = useEngine(
     wordLimit,
     timeLimit,
-    true
+    true,
+    socket,
+    roomId  
   );
 
   const [players, setPlayers] = useState([]);
@@ -32,7 +34,6 @@ function MultiplayerTest() {
   const [accuracy, setAccuracy] = useState(100);
   const [progress, setProg] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [showWaitingScreen, setShowWaitingScreen] = useState(false);
 
   // Socket listeners
   useEffect(() => {
@@ -43,7 +44,6 @@ function MultiplayerTest() {
 
     socket.on("playerFinished", (data) => {
       setIsFinished(true);
-      setShowWaitingScreen(true);
     });
 
     socket.on("testEnded", (data) => {
@@ -100,62 +100,8 @@ function MultiplayerTest() {
     }
   }, [progress, isFinished]);
 
-  // Waiting screen component
-  const WaitingScreen = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] rounded-xl p-8 border border-gray-700 max-w-md w-full mx-4">
-        <div className="text-center">
-          <div className="mb-6">
-            <Clock className="w-16 h-16 text-[#ef4444] mx-auto mb-4 animate-pulse" />
-            <h2 className="text-2xl font-bold text-white mb-2">Great Job!</h2>
-            <p className="text-gray-300">
-              You finished the test! Waiting for other players...
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center bg-[#121212] p-3 rounded-lg">
-              <span className="text-gray-400">Your WPM:</span>
-              <span className="text-white font-bold">{Math.floor(wpm)}</span>
-            </div>
-            <div className="flex justify-between items-center bg-[#121212] p-3 rounded-lg">
-              <span className="text-gray-400">Your Accuracy:</span>
-              <span className="text-white font-bold">
-                {Math.floor(accuracy)}%
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <div className="flex items-center justify-center gap-2 text-gray-400 mb-3">
-              <Users className="w-4 h-4" />
-              <span className="text-sm">Other players still typing...</span>
-            </div>
-            <div className="space-y-2">
-              {players
-                .filter((p) => p.progress < 100)
-                .map((player) => (
-                  <div
-                    key={player.userId}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <span className="text-gray-300">{player.username}</span>
-                    <span className="text-[#ef4444]">
-                      {Math.floor(player.progress)}%
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-[#121212] text-white flex justify-center py-10 px-4">
-      {showWaitingScreen && <WaitingScreen />}
-
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
         {/*Typing Test */}
         <div className="flex-1">
@@ -183,16 +129,37 @@ function MultiplayerTest() {
                   words={words}
                   className="text-slate-500 font-mono text-xl md:text-2xl leading-relaxed whitespace-pre-wrap break-words select-none"
                 />
-                {!isFinished && (
-                  <UserTypings
-                    userInput={typed}
-                    words={words}
-                    className="absolute inset-0 text-white font-mono text-xl md:text-2xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
-                  />
-                )}
+                <UserTypings
+                  userInput={typed}
+                  words={words}
+                  className="absolute inset-0 text-white font-mono text-xl md:text-2xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
+                />
               </div>
             </WordsContainer>
           </div>
+
+          {/* Waiting Message */}
+          {isFinished && (
+            <div className="mt-6 text-center">
+              <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-700">
+                <div className="flex items-center justify-center gap-2 text-[#ef4444] mb-2">
+                  <Clock className="w-5 h-5 animate-pulse" />
+                  <span className="text-lg font-semibold">Test Complete!</span>
+                </div>
+                <p className="text-gray-300 text-base">
+                  Waiting for other players to finish...
+                </p>
+                <div className="mt-4 flex justify-center gap-6 text-sm">
+                  <span className="text-gray-400">
+                    Your WPM: <span className="text-white font-bold">{Math.floor(wpm)}</span>
+                  </span>
+                  <span className="text-gray-400">
+                    Accuracy: <span className="text-white font-bold">{Math.floor(accuracy)}%</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/*Players Progress */}
