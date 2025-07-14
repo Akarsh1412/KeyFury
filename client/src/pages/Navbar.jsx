@@ -3,14 +3,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 function Navbar() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    navigate('/');
+    try {
+      await signOut(auth);
+      toast.success('Logged out successfully!');
+      navigate('/');
+    } catch (error) {
+      toast.error('Logout failed. Please try again.');
+    }
   };
 
   return (

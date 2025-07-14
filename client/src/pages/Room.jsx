@@ -4,6 +4,7 @@ import { Copy, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/socketContext';
 import Chat from '../components/Chat';
+import { toast } from 'react-toastify';
 
 function Room() {
   const { roomId } = useParams();
@@ -59,6 +60,9 @@ function Room() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
+      toast.success("Room ID copied!",{
+        autoClose: 1500
+      });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {

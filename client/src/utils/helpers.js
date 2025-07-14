@@ -51,3 +51,26 @@ export const calculateRealTimeErrors = (typed, words, cursor) => {
   const wordsReached = words.substring(0, Math.min(cursor, words.length));
   return countErrors(typed, wordsReached);
 };
+
+export const getFirebaseErrorMessage = (code) => {
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'Invalid email address format.';
+    case 'auth/user-not-found':
+      return 'No account found with this email.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.';
+    case 'auth/invalid-credential':
+      return 'Invalid credentials. Please check your email and password.';
+    case 'auth/popup-closed-by-user':
+      return 'Google sign-in was closed before completion.';
+    case 'auth/user-disabled':
+      return 'This user account has been disabled.';
+    case 'auth/email-already-in-use':
+      return 'This email is already in use. Try logging in instead.';
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
+};

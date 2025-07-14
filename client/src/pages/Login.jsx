@@ -3,20 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
 import { FcGoogle } from 'react-icons/fc';
+import { toast } from 'react-toastify';
+import { getFirebaseErrorMessage } from '../utils/helpers';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast.success('Logged in successfully!');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      const msg = getFirebaseErrorMessage(err.code);
+      toast.error(msg);
     }
   };
 
@@ -24,9 +27,11 @@ function Login() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      toast.success('Signed in with Google!');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      const msg = getFirebaseErrorMessage(err.code);
+      toast.error(msg);
     }
   };
 
@@ -35,21 +40,19 @@ function Login() {
       <div className="bg-[#1a1a1a] p-8 rounded-xl shadow-lg max-w-md w-full border border-gray-700">
         <h2 className="text-3xl font-bold text-white mb-6 text-center">Login to KeyFury</h2>
 
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-
         <form onSubmit={handleLogin} className="space-y-4">
           <input
-            name='email'
+            name="email"
             type="email"
             placeholder="Email"
             className="w-full px-4 py-3 bg-[#0e0e0e] border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            autoComplete='true'
+            autoComplete="true"
             required
           />
           <input
-            name='password'
+            name="password"
             type="password"
             placeholder="Password"
             className="w-full px-4 py-3 bg-[#0e0e0e] border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#ef4444]"
@@ -92,6 +95,6 @@ function Login() {
       </div>
     </section>
   );
-};
+}
 
 export default Login;
