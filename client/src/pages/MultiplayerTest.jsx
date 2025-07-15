@@ -16,7 +16,7 @@ import {
 
 function MultiplayerTest() {
   const timeLimit = 140;
-  const wordLimit = 20;
+  const wordLimit = 100;
   const { roomId } = useParams();
   const { user } = useAuth();
   const { socket } = useSocket();
