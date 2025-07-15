@@ -14,12 +14,12 @@ export const SocketProvider = ({ children }) => {
 
     socket.on("connect", () => {
       setIsConnected(true);
-      console.log("Socket connected:", socket.id);
+      // console.log("Socket connected:", socket.id);
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
-      console.log("Socket disconnected");
+      // console.log("Socket disconnected");
     });
 
     return () => {

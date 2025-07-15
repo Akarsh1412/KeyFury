@@ -15,12 +15,12 @@ function Multiplayer() {
   const handleJoin = () => {
     try {
       if (!user) {
-        console.error("User not authenticated");
+        toast.error("User not authenticated");
         return;
       }
 
       if (!socket || !socket.connected) {
-        console.error("Socket not connected");
+        toast.error("Error");
         return;
       }
 
@@ -35,7 +35,7 @@ function Multiplayer() {
 
       navigate(`/multiplayer/join/${code}`);
     } catch (error) {
-      console.error("Error joining room:", error);
+      toast.error("Error joining room:", error);
     }
   };
 
@@ -49,12 +49,12 @@ function Multiplayer() {
       const newRoomId = generateRoomId();
 
       if (!user) {
-        console.error("User not authenticated");
+        toast.error("User not authenticated");
         return;
       }
 
       if (!socket || !socket.connected) {
-        console.error("Socket not connected");
+        toast.error("Error");
         return;
       } 
 
@@ -71,7 +71,7 @@ function Multiplayer() {
         }
       );
     } catch (error) {
-      console.error("Error creating room:", error);
+      toast.error("Error creating room:", error);
     }
   };
 

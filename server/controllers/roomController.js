@@ -46,7 +46,7 @@ export const createRoom = async (
     io.to(roomId).emit("roomUpdate", sortPlayersByWpm(playersData));
 
     if (callback) callback({ success: true });
-    console.log("Room Created with Room ID:", roomId);
+    // console.log("Room Created with Room ID:", roomId);
   } catch (err) {
     console.error("Error creating room:", err);
     if (callback)
@@ -92,23 +92,49 @@ export const joinRoom = async (io, socket, { roomId, userId, username }) => {
 
 export const leaveRoom = async (io, socket, { roomId, userId }) => {
   try {
+    const roomExists = await redis.exists(`room:${roomId}`);
+    if (!roomExists) return;
+
+    const currentLeaderId = await redis.get(`room:${roomId}:leader`);
+    const wasLeader = currentLeaderId === userId;
+
     await redis.hdel(`room:${roomId}`, userId);
     await redis.del(`socket:${socket.id}`);
 
-    const playersData = (await redis.hgetall(`room:${roomId}`)) || {};
+    let playersData = await redis.hgetall(`room:${roomId}`) || {};
+    const remainingPlayerIds = Object.keys(playersData);
 
-    if (Object.keys(playersData).length === 0) {
-      console.log(`Room ${roomId} is empty, deleting main hash.`);
+    if (remainingPlayerIds.length === 0) {
       const cleanupPipeline = redis.pipeline();
       cleanupPipeline.del(`room:${roomId}`);
       cleanupPipeline.del(`room:${roomId}:leader`);
+      cleanupPipeline.del(`room:${roomId}:messages`);
+      cleanupPipeline.del(`room:${roomId}:testStartTime`);
       await cleanupPipeline.exec();
       removeActiveRoom(roomId);
     } else {
+      if (wasLeader) {
+        const newLeaderId = remainingPlayerIds[0];
+        const newLeaderData = JSON.parse(playersData[newLeaderId]);
+        newLeaderData.isLeader = true;
+        
+        const roomTtl = await redis.ttl(`room:${roomId}`);
+        const pipeline = redis.pipeline();
+
+        if (roomTtl > 0) {
+          pipeline.set(`room:${roomId}:leader`, newLeaderId, { ex: roomTtl });
+        } else {
+          pipeline.set(`room:${roomId}:leader`, newLeaderId);
+        }
+        pipeline.hset(`room:${roomId}`, { [newLeaderId]: JSON.stringify(newLeaderData) });
+        await pipeline.exec();
+
+        playersData = await redis.hgetall(`room:${roomId}`);
+      }
       io.to(roomId).emit("roomUpdate", sortPlayersByWpm(playersData));
     }
   } catch (err) {
-    console.error("Error leaving room:", err);
+    console.error("Error in leaveRoom:", err);
   }
 };
 
@@ -189,13 +215,9 @@ export const chatMessage = async (io, socket, { roomId, userId, message }) => {
 };
 
 export const disconnect = async (io, socket) => {
-  console.log(`Socket disconnected: ${socket.id}`);
+  // console.log(`Socket disconnected: ${socket.id}`);
   try {
-    const sessionDataJSON = await redis.get(`socket:${socket.id}`);
-    if (sessionDataJSON) {
-      const sessionData = JSON.parse(sessionDataJSON);
-      await leaveRoom(io, socket, sessionData);
-    }
+    await redis.del(`socket:${socket.id}`);
   } catch (err) {
     console.error("Error cleaning up on disconnect:", err);
   }

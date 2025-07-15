@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
 import { FcGoogle } from 'react-icons/fc';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { getFirebaseErrorMessage } from '../utils/helpers';
 import LoadingScreen from '../components/LoadingScreen';
@@ -12,6 +13,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -75,16 +77,28 @@ function Login() {
             required
             disabled={isLoading}
           />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            className="w-full px-4 py-3 bg-[#0e0e0e] border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#ef4444] transition-all"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-          />
+
+          <div className="relative">
+            <input
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              className="w-full px-4 py-3 bg-[#0e0e0e] border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#ef4444] transition-all pr-12"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#ef4444] focus:outline-none"
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
+            </button>
+          </div>
 
           <button
             type="submit"

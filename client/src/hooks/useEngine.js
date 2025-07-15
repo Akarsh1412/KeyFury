@@ -73,7 +73,7 @@ const useEngine = (
   // When timer ends
   useEffect(() => {
     if (!timeLeft && state === "run") {
-      console.log("Time's up!");
+      // console.log("Time's up!");
       setState("finish");
     }
   }, [timeLeft, state]);
@@ -81,7 +81,7 @@ const useEngine = (
   // When User finishes typing all words (single player)
   useEffect(() => {
     if (!isMultiplayer && areWordsFinished) {
-      console.log("All words typed!");
+      // console.log("All words typed!");
 
       // Accumulate errors from current word set
       const currentWordSetErrors = calculateCurrentErrors();
@@ -101,13 +101,13 @@ const useEngine = (
   // When User finishes typing all words (multiplayer)
   useEffect(() => {
     if (isMultiplayer && areWordsFinished) {
-      console.log("All words typed!");
+      // console.log("All words typed!");
       setState("finish");
     }
   }, [areWordsFinished, isMultiplayer]);
 
   const restart = useCallback(() => {
-    console.log("Restarting...");
+    // console.log("Restarting...");
     resetTimer();
     resetTotalTyped();
     setState("start");

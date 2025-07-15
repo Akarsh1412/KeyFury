@@ -36,13 +36,13 @@ const activeRooms = new Set();
 
 export const addActiveRoom = (roomId) => {
   activeRooms.add(roomId);
-  console.log(`Added room ${roomId} to active tracking. Total active: ${activeRooms.size}`);
+  // console.log(`Added room ${roomId} to active tracking. Total active: ${activeRooms.size}`);
 };
 
 export const removeActiveRoom = (roomId) => {
   const wasRemoved = activeRooms.delete(roomId);
   if (wasRemoved) {
-    console.log(`Removed room ${roomId} from active tracking. Total active: ${activeRooms.size}`);
+    // console.log(`Removed room ${roomId} from active tracking. Total active: ${activeRooms.size}`);
   }
 };
 
@@ -81,7 +81,7 @@ const validateActiveRooms = async () => {
     });
     
     if (roomsToRemove.length > 0) {
-      console.log(`Cleaned up ${roomsToRemove.length} invalid active rooms`);
+      // console.log(`Cleaned up ${roomsToRemove.length} invalid active rooms`);
     }
   } catch (error) {
     console.error('Error validating active rooms:', error);
@@ -95,7 +95,7 @@ const startTimerSyncService = (io) => {
     if (activeRooms.size === 0) return;
     
     const roomsToSync = Array.from(activeRooms);
-    console.log(`Syncing timer for ${roomsToSync.length} active rooms`);
+    // console.log(`Syncing timer for ${roomsToSync.length} active rooms`);
     
     for (const roomId of roomsToSync) {
       try {
@@ -111,7 +111,7 @@ const startTimerSyncService = (io) => {
 const startCleanupService = () => {
   setInterval(async () => {
     await validateActiveRooms();
-    console.log(`Active rooms cleanup completed. Current active: ${activeRooms.size}`);
+    // console.log(`Active rooms cleanup completed. Current active: ${activeRooms.size}`);
   }, 5 * 60 * 1000); // 5 minutes
 };
 
