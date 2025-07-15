@@ -13,7 +13,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Trophy, Target, Zap, ArrowLeft, LogOut } from "lucide-react";
+import axios from "axios";
 import LoadingScreen from "../components/LoadingScreen";
+
+const API_URL = import.meta.env.VITE_BACKEND_URL;
 
 function MultiplayerResults() {
   const { roomId } = useParams();
@@ -24,29 +27,31 @@ function MultiplayerResults() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("wpm");
-  const isGoingBackToRoom = useRef(false); 
+  const isGoingBackToRoom = useRef(false);
 
   // Fetch results on component mount
   useEffect(() => {
-    if (!socket || !user) return;
+    if (!user) return;
 
-    socket.emit("getResults", { roomId });
-
-    socket.on("testResults", (data) => {
-      setResults(data);
-      setLoading(false);
-    });
-
-    return () => {
-      socket.off("testResults");
+    const fetchResults = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/results/${roomId}`);
+        setResults(response.data);
+      } catch (err) {
+        console.error("Failed to fetch results:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [socket, user, roomId]);
+
+    fetchResults();
+  }, [user, roomId]);
 
   useEffect(() => {
     return () => {
       // Only leave room if not going back to room
       if (!isGoingBackToRoom.current && socket && user) {
-        socket.emit('leaveRoom', { roomId, userId: user.uid });
+        socket.emit("leaveRoom", { roomId, userId: user.uid });
       }
     };
   }, [socket, user, roomId]);
@@ -55,14 +60,14 @@ function MultiplayerResults() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (socket && user && !isGoingBackToRoom.current) {
-        socket.emit('leaveRoom', { roomId, userId: user.uid });
+        socket.emit("leaveRoom", { roomId, userId: user.uid });
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [socket, user, roomId]);
 
@@ -81,8 +86,8 @@ function MultiplayerResults() {
   if (loading) {
     return (
       <LoadingScreen
-        message="Loading Results" 
-        subtitle="Did You Finish First ??"  
+        message="Loading Results..."
+        subtitle="Did You Finish First ?"
       />
     );
   }
@@ -106,12 +111,11 @@ function MultiplayerResults() {
     );
   }
 
-  // Sort players by performance
   const sortedPlayers = [...results.players].sort((a, b) => {
-    if (a.finalProgress !== b.finalProgress) {
-      return b.finalProgress - a.finalProgress;
+    if (a.finalWpm !== b.finalWpm) {
+      return b.finalWpm - a.finalWpm;
     }
-    return b.finalWpm - a.finalWpm;
+    return b.finalProgress - a.finalProgress;
   });
 
   const getChartData = () => {

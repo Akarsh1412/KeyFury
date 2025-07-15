@@ -45,7 +45,7 @@ const useTypings = (enabled) => {
   return {
     typed,
     cursor,
-    totalTyped: totalTyped.current,
+    totalTyped,
     clearTyped,
     resetTotalTyped,
   };

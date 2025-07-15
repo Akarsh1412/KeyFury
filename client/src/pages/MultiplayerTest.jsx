@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/socketContext";
 import useEngine from "../hooks/useEngine";
+import { useThrottle } from "../hooks/useThrottle";
 import { Timer, Clock } from "lucide-react";
 import WordsContainer from "../components/WordsContainer";
 import GenerateWords from "../components/GenerateWords";
@@ -26,7 +27,7 @@ function MultiplayerTest() {
     timeLimit,
     true,
     socket,
-    roomId  
+    roomId
   );
 
   const [players, setPlayers] = useState([]);
@@ -34,6 +35,13 @@ function MultiplayerTest() {
   const [accuracy, setAccuracy] = useState(100);
   const [progress, setProg] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+
+  // Throttled emit function using custom hook (300ms delay)
+  const throttledEmitStats = useThrottle((stats) => {
+    if (socket && user) {
+      socket.emit("updateStats", stats);
+    }
+  }, 300);
 
   // Socket listeners
   useEffect(() => {
@@ -58,9 +66,9 @@ function MultiplayerTest() {
     };
   }, [socket, user, roomId, navigate]);
 
-  // Local stats (WPM, progress), sync to server
+  // Local stats (WPM, progress), sync to server with throttling
   useEffect(() => {
-    if (totalTyped === 0 || state === "finish" || isFinished) return;
+    if (totalTyped === 0 || state === "finish" || isFinished || !user) return;
 
     const currentErrors = calculateRealTimeErrors(typed, words, typed.length);
     const correctCharacters = totalTyped - currentErrors;
@@ -71,25 +79,38 @@ function MultiplayerTest() {
       100,
       (typed.length / words.length) * 100
     );
-    const nextAccuracy = calculateAccuracy(errors, totalTyped);
+    
+    const nextAccuracy = calculateAccuracy(currentErrors, totalTyped);
 
     setWpm(nextWpm);
     setProg(progressPercentage);
     setAccuracy(nextAccuracy);
 
-    socket?.emit("updateStats", {
+    throttledEmitStats({
       roomId,
       userId: user.uid,
       wpm: nextWpm,
       progress: progressPercentage,
       accuracy: nextAccuracy,
     });
-  }, [totalTyped, socket, roomId, user, timeLeft, isFinished]);
+  }, [
+    totalTyped,
+    throttledEmitStats,
+    roomId,
+    user,
+    timeLeft,
+    isFinished,
+    typed,
+    words,
+    errors,
+    timeLimit,
+    state
+  ]);
 
   // Handle time up
   useEffect(() => {
-    if (timeLeft <= 0 && !isFinished) {
-      socket?.emit("endTest", { roomId });
+    if (timeLeft <= 0 && !isFinished && socket) {
+      socket.emit("endTest", { roomId });
     }
   }, [timeLeft, socket, roomId, isFinished]);
 
@@ -103,7 +124,7 @@ function MultiplayerTest() {
   return (
     <div className="min-h-screen bg-[#121212] text-white flex justify-center py-10 px-4">
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
-        {/*Typing Test */}
+        {/* Typing Test */}
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <div className="text-lg font-semibold flex items-center gap-2">
@@ -162,7 +183,7 @@ function MultiplayerTest() {
           )}
         </div>
 
-        {/*Players Progress */}
+        {/* Players Progress */}
         <div className="w-full lg:w-[420px] bg-[#1a1a1a] rounded-xl p-6 border border-gray-700 h-fit">
           <h2 className="text-lg font-semibold mb-4">Players Progress</h2>
           <ul className="space-y-3">

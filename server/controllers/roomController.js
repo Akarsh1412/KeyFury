@@ -1,8 +1,19 @@
 import redis from "../redis/redisClient.js";
-import { sortPlayersByProgress } from "../utils/helpers.js";
 import { addActiveRoom, removeActiveRoom } from "../server.js";
+import { sortPlayersByWpm } from "../utils/helpers.js";
 
-const ROOM_TTL = 60 * 15;
+export const TEST_DURATION_SECONDS = 140;
+
+export const ROOM_TTL = 60 * 15; // 15 minutes
+export const USER_SOCKET_TTL = 60 * 25; // 25 minutes
+export const CHAT_TTL = 60 * 20; // 20 minutes
+export const TEST_DATA_TTL = 60 * 20; // 20 minutes
+
+const addSocketMapping = (socket, userId, roomId) => {
+  const key = `socket:${socket.id}`;
+  const value = { userId, roomId };
+  return redis.set(key, value, { ex: USER_SOCKET_TTL });
+};
 
 export const createRoom = async (
   io,
@@ -11,7 +22,8 @@ export const createRoom = async (
   callback
 ) => {
   try {
-    socket.join(roomId);
+    await socket.join(roomId);
+
     const playerData = {
       username,
       wpm: 0,
@@ -22,129 +34,81 @@ export const createRoom = async (
       performanceHistory: [],
     };
 
-    await redis.hset(`room:${roomId}`, { [userId]: playerData });
-    await redis.set(`room:${roomId}:leader`, userId);
-    await redis.set(`user:${userId}:socket`, socket.id);
-    await redis.expire(`room:${roomId}`, ROOM_TTL);
+    const pipeline = redis.pipeline();
+    pipeline.hset(`room:${roomId}`, { [userId]: playerData });
+    pipeline.expire(`room:${roomId}`, ROOM_TTL);
+    pipeline.set(`room:${roomId}:leader`, userId, { ex: ROOM_TTL });
+    await pipeline.exec();
 
-    const players = await redis.hgetall(`room:${roomId}`);
+    await addSocketMapping(socket, userId, roomId);
 
-    io.to(roomId).emit("roomUpdate", sortPlayersByProgress(players));
+    const playersData = await redis.hgetall(`room:${roomId}`);
+    io.to(roomId).emit("roomUpdate", sortPlayersByWpm(playersData));
 
-    if (callback) {
-      console.log("Room Created with Room ID:", roomId);
-      callback({ success: true });
-    }
+    if (callback) callback({ success: true });
+    console.log("Room Created with Room ID:", roomId);
   } catch (err) {
     console.error("Error creating room:", err);
-    if (callback) {
+    if (callback)
       callback({ success: false, message: "Failed to create room" });
-    }
   }
 };
 
 export const joinRoom = async (io, socket, { roomId, userId, username }) => {
-  const exists = await redis.exists(`room:${roomId}`);
+  try {
+    const exists = await redis.exists(`room:${roomId}`);
+    if (!exists) return socket.emit("error", "Room not found");
 
-  if (!exists) return socket.emit("error", "Room not found");
+    await socket.join(roomId);
+    await addSocketMapping(socket, userId, roomId);
 
-  socket.join(roomId);
-  await redis.set(`user:${userId}:socket`, socket.id);
-  const playerExists = await redis.hexists(`room:${roomId}`, userId);
+    const playerExists = await redis.hexists(`room:${roomId}`, userId);
 
-  if (!playerExists) {
-    const playerData = {
-      username,
-      wpm: 0,
-      progress: 0,
-      accuracy: 100,
-      isLeader: false,
-      finished: false,
-      performanceHistory: [],
-    };
-    await redis.hset(`room:${roomId}`, { [userId]: playerData });
+    if (!playerExists) {
+      const playerData = {
+        username,
+        wpm: 0,
+        progress: 0,
+        accuracy: 100,
+        isLeader: false,
+        finished: false,
+        performanceHistory: [],
+      };
+      await redis.hset(`room:${roomId}`, { [userId]: playerData });
+    }
+
+    const [history, playersData] = await Promise.all([
+      redis.lrange(`room:${roomId}:messages`, 0, -1),
+      redis.hgetall(`room:${roomId}`),
+    ]);
+
+    socket.emit("chatHistory", history);
+    io.to(roomId).emit("roomUpdate", sortPlayersByWpm(playersData));
+  } catch (err) {
+    console.error("Error joining room:", err);
+    socket.emit("error", "Failed to join room");
   }
-
-  const history = await redis.lrange(`room:${roomId}:messages`, 0, -1);
-  const playersData = await redis.hgetall(`room:${roomId}`);
-
-  socket.emit("chatHistory", history);
-  io.to(roomId).emit("roomUpdate", sortPlayersByProgress(playersData));
 };
 
 export const leaveRoom = async (io, socket, { roomId, userId }) => {
   try {
     await redis.hdel(`room:${roomId}`, userId);
-    await redis.del(`user:${userId}:socket`);
+    await redis.del(`socket:${socket.id}`);
+
     const playersData = (await redis.hgetall(`room:${roomId}`)) || {};
 
     if (Object.keys(playersData).length === 0) {
-      await redis.del(`room:${roomId}`);
-      await redis.del(`room:${roomId}:leader`);
-      await redis.del(`room:${roomId}:messages`);
-
-      // Remove from active tracking when room is deleted
+      console.log(`Room ${roomId} is empty, deleting main hash.`);
+      const cleanupPipeline = redis.pipeline();
+      cleanupPipeline.del(`room:${roomId}`);
+      cleanupPipeline.del(`room:${roomId}:leader`);
+      await cleanupPipeline.exec();
       removeActiveRoom(roomId);
     } else {
-      io.to(roomId).emit("roomUpdate", sortPlayersByProgress(playersData));
+      io.to(roomId).emit("roomUpdate", sortPlayersByWpm(playersData));
     }
   } catch (err) {
     console.error("Error leaving room:", err);
-  }
-};
-
-export const startTest = async (io, socket, { roomId, userId }) => {
-  const leaderId = await redis.get(`room:${roomId}:leader`);
-  if (leaderId !== userId) return;
-
-  // Start the 5-second countdown
-  io.to(roomId).emit("gameStarting", { countdown: 5 });
-
-  let countdown = 5;
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      io.to(roomId).emit("countdownUpdate", { countdown });
-    } else {
-      clearInterval(countdownInterval);
-
-      const startTime = Date.now();
-      redis.set(`room:${roomId}:testStartTime`, startTime);
-      addActiveRoom(roomId);
-
-      io.to(roomId).emit("testStarted", {
-        startTime
-      });
-
-      setTimeout(() => {
-        io.to(roomId).emit("testEnded", { reason: "time_up" });
-        removeActiveRoom(roomId);
-      }, 140000);
-    }
-  }, 1000);
-};
-
-export const broadcastTimerSync = async (io, roomId) => {
-  try {
-    const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
-    const testDuration = 140;
-
-    if (!testStartTime) return;
-
-    const timeElapsed = Math.floor(
-      (Date.now() - parseInt(testStartTime)) / 1000
-    );
-    const timeLeft = Math.max(0, testDuration - timeElapsed);
-
-    if (timeLeft > 0) {
-      io.to(roomId).emit("timerSync", {
-        timeLeft,
-        isRunning: true,
-        serverTime: Date.now(),
-      });
-    }
-  } catch (err) {
-    console.error("Error broadcasting timer sync:", err);
   }
 };
 
@@ -154,13 +118,18 @@ export const updateStats = async (
   { roomId, userId, wpm, progress, accuracy }
 ) => {
   try {
-    const playerData = await redis.hget(`room:${roomId}`, userId);
-    if (!playerData) return;
+    const playerDataStr = await redis.hget(`room:${roomId}`, userId);
+    if (!playerDataStr) return;
+    const playerData = playerDataStr;
+
+    if (playerData.finished) return;
 
     const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
-    const timeElapsed = testStartTime
-      ? Math.floor((Date.now() - parseInt(testStartTime)) / 1000)
-      : 0;
+    if (!testStartTime) return;
+
+    const timeElapsed = Math.floor(
+      (Date.now() - parseInt(testStartTime)) / 1000
+    );
 
     playerData.wpm = wpm;
     playerData.progress = progress;
@@ -173,34 +142,25 @@ export const updateStats = async (
       accuracy,
     });
 
-    // Check if player finished (100% progress)
-    if (progress >= 100 && !playerData.finished) {
+    if (progress >= 100) {
       playerData.finished = true;
       playerData.finishTime = timeElapsed;
     }
 
     await redis.hset(`room:${roomId}`, { [userId]: playerData });
 
-    const playersData = await redis.hgetall(`room:${roomId}`);
-    const players = Object.entries(playersData).map(([userId, playerData]) => {
-      return {
-        userId,
-        ...playerData,
-      };
-    });
-
-    // Check if all players have finished
-    const allFinished = players.every((player) => player.finished);
+    const updatedPlayersData = await redis.hgetall(`room:${roomId}`);
+    const playersList = Object.values(updatedPlayersData);
+    const allFinished = playersList.every((p) => p.finished);
 
     if (allFinished) {
       io.to(roomId).emit("testEnded", { reason: "all_finished" });
+      removeActiveRoom(roomId);
+      await redis.del(`room:${roomId}:testStartTime`);
     } else {
-      io.to(roomId).emit("liveStats", sortPlayersByProgress(players));
-
+      io.to(roomId).emit("liveStats", sortPlayersByWpm(updatedPlayersData));
       if (playerData.finished) {
-        io.to(socket.id).emit("playerFinished", {
-          message: "You finished! Waiting for other players...",
-        });
+        socket.emit("playerFinished", { message: "You finished!" });
       }
     }
   } catch (err) {
@@ -214,39 +174,126 @@ export const chatMessage = async (io, socket, { roomId, userId, message }) => {
     if (!playerData) return;
 
     const { username } = playerData;
-    const cleanMessage = message;
-    const messageData = {
-      userId,
-      username,
-      message: cleanMessage,
-      timestamp: Date.now(),
-    };
+    const messageData = { userId, username, message, timestamp: Date.now() };
 
     io.to(roomId).emit("chatMessage", messageData);
-    await redis.rpush(`room:${roomId}:messages`, messageData);
-    await redis.ltrim(`room:${roomId}:messages`, 0, 20);
+
+    const pipeline = redis.pipeline();
+    pipeline.rpush(`room:${roomId}:messages`, JSON.stringify(messageData));
+    pipeline.expire(`room:${roomId}:messages`, CHAT_TTL);
+    pipeline.ltrim(`room:${roomId}:messages`, -50, -1);
+    await pipeline.exec();
   } catch (err) {
     console.error("Error handling chat message:", err);
+  }
+};
+
+export const disconnect = async (io, socket) => {
+  console.log(`Socket disconnected: ${socket.id}`);
+  try {
+    const sessionDataJSON = await redis.get(`socket:${socket.id}`);
+    if (sessionDataJSON) {
+      const sessionData = JSON.parse(sessionDataJSON);
+      await leaveRoom(io, socket, sessionData);
+    }
+  } catch (err) {
+    console.error("Error cleaning up on disconnect:", err);
+  }
+};
+
+export const startTest = async (io, socket, { roomId, userId }) => {
+  try {
+    const playersDataObject = await redis.hgetall(`room:${roomId}`);
+    if (!playersDataObject) return;
+
+    const pipeline = redis.pipeline();
+    for (const pId in playersDataObject) {
+      const player = playersDataObject[pId];
+      player.wpm = 0;
+      player.progress = 0;
+      player.accuracy = 100;
+      player.finished = false;
+      player.finishTime = null;
+      player.performanceHistory = [];
+      pipeline.hset(`room:${roomId}`, { [pId]: JSON.stringify(player) });
+    }
+    await pipeline.exec();
+
+    addActiveRoom(roomId);
+    io.to(roomId).emit("gameStarting", { countdown: 5 });
+    let countdown = 5;
+
+    const countdownInterval = setInterval(async () => {
+      countdown--;
+      if (countdown > 0) {
+        io.to(roomId).emit("countdownUpdate", { countdown });
+      } else {
+        clearInterval(countdownInterval);
+
+        const startTime = Date.now();
+        await redis.set(`room:${roomId}:testStartTime`, startTime, {
+          ex: TEST_DATA_TTL,
+        });
+
+        io.to(roomId).emit("testStarted", { startTime });
+        setTimeout(async () => {
+          const currentStartTime = await redis.get(
+            `room:${roomId}:testStartTime`
+          );
+          if (String(currentStartTime) === String(startTime)) {
+            io.to(roomId).emit("testEnded", { reason: "time_up" });
+            removeActiveRoom(roomId);
+            await redis.del(`room:${roomId}:testStartTime`);
+          }
+        }, (TEST_DURATION_SECONDS + 2) * 1000);
+      }
+    }, 1000);
+  } catch (err) {
+    console.error("Error starting test:", err);
+  }
+};
+
+export const broadcastTimerSync = async (io, roomId) => {
+  try {
+    const roomExists = await redis.exists(`room:${roomId}`);
+    if (!roomExists) return removeActiveRoom(roomId);
+
+    const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
+    if (!testStartTime) return removeActiveRoom(roomId);
+
+    const timeElapsed = Math.floor(
+      (Date.now() - parseInt(testStartTime)) / 1000
+    );
+    const timeLeft = Math.max(0, TEST_DURATION_SECONDS - timeElapsed);
+
+    if (timeLeft > 0) {
+      io.to(roomId).emit("timerSync", {
+        timeLeft,
+        isRunning: true,
+        serverTime: Date.now(),
+      });
+    } else {
+      removeActiveRoom(roomId);
+    }
+  } catch (err) {
+    console.error(`Error broadcasting timer sync for room ${roomId}:`, err);
+    removeActiveRoom(roomId);
   }
 };
 
 export const getTimerSync = async (io, socket, { roomId }) => {
   try {
     const testStartTime = await redis.get(`room:${roomId}:testStartTime`);
-    const testDuration = 140;
-
     if (!testStartTime) {
       return socket.emit("timerSync", {
-        timeLeft: testDuration,
+        timeLeft: TEST_DURATION_SECONDS,
         isRunning: false,
       });
     }
-
     const timeElapsed = Math.floor(
       (Date.now() - parseInt(testStartTime)) / 1000
     );
-    const timeLeft = Math.max(0, testDuration - timeElapsed);
-
+    const timeLeft = Math.max(0, TEST_DURATION_SECONDS - timeElapsed);
     socket.emit("timerSync", {
       timeLeft,
       isRunning: timeLeft > 0,
@@ -258,39 +305,36 @@ export const getTimerSync = async (io, socket, { roomId }) => {
 };
 
 export const endTest = async (io, socket, { roomId }) => {
-  io.to(roomId).emit("testEnded", { reason: "time_up" });
+  io.to(roomId).emit("testEnded", { reason: "manual_end" });
+  removeActiveRoom(roomId);
+  await redis.del(`room:${roomId}:testStartTime`);
 };
 
-export const getResults = async (io, socket, { roomId }) => {
+export const handleGetResults = async (req, res) => {
   try {
-    const playersData = await redis.hgetall(`room:${roomId}`);
+    const { roomId } = req.params;
+    const playersDataObject = await redis.hgetall(`room:${roomId}`);
 
-    const players = Object.entries(playersData).map(([userId, playerData]) => {
-      return {
+    if (!playersDataObject || Object.keys(playersDataObject).length === 0) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const playersList = Object.entries(playersDataObject).map(
+      ([userId, player]) => ({
         userId,
-        ...playerData,
-      };
-    });
-
-    const results = {
-      players: players.map((player) => ({
-        userId: player.userId,
         username: player.username,
         finalWpm: player.wpm,
         finalAccuracy: player.accuracy,
         finalProgress: player.progress,
         finished: player.finished,
         finishTime: player.finishTime,
-        performanceHistory: player.performanceHistory,
-      })),
-    };
+        performanceHistory: player.performanceHistory || [],
+      })
+    );
 
-    socket.emit("testResults", results);
+    res.json({ players: playersList });
   } catch (err) {
-    console.error("Error getting results:", err);
+    console.error("Error getting results via API:", err);
+    res.status(500).json({ message: "Failed to fetch results" });
   }
-};
-
-export const disconnect = async (io, socket) => {
-  console.log(`Socket disconnected: ${socket.id}`);
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { formatTime } from '../utils/helpers';
+import { toast } from 'react-toastify';
 
 function Chat({ socket, roomId, user }) {
   const [messages, setMessages] = useState([]);
@@ -51,7 +52,7 @@ function Chat({ socket, roomId, user }) {
 
     const trimmedMessage = messageInput.trim();
     if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-      alert(`Message too long! Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`);
+      toast.error(`Message too long! Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`);
       return;
     }
 

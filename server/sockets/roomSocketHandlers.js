@@ -1,4 +1,4 @@
-import { createRoom, joinRoom, startTest, updateStats, disconnect, chatMessage, leaveRoom, endTest, getResults, getTimerSync } from '../controllers/roomController.js';
+import { createRoom, joinRoom, startTest, updateStats, disconnect, chatMessage, leaveRoom, endTest, getTimerSync } from '../controllers/roomController.js';
 
 const roomSocketHandlers = (io, socket) => {
   socket.on("createRoom", (data, callback) => createRoom(io, socket, data, callback));
@@ -9,7 +9,6 @@ const roomSocketHandlers = (io, socket) => {
   socket.on("endTest", (data) => endTest(io, socket, data));
   socket.on("updateStats", (data) => updateStats(io, socket, data));
   socket.on("getTimerSync", (data) => getTimerSync(io, socket, data));
-  socket.on("getResults", (data) => getResults(io, socket, data));
   socket.on("disconnect", () => disconnect(io, socket));
 };
 

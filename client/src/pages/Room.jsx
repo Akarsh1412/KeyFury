@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; 
+import { useParams, useNavigate } from 'react-router-dom';
 import { Copy, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/socketContext';
@@ -17,13 +17,16 @@ function Room() {
   const [currentUser, setCurrentUser] = useState('');
   const [players, setPlayers] = useState([]);
   const [testStarted, setTestStarted] = useState(false);
+  const [testFinished, setTestFinished] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  const isRedirectingToTest = useRef(false);
+  const isNavigating = useRef(false);
 
   // Join room and listen for updates
   useEffect(() => {
     if (!user || !socket || !socket.connected) return;
+
+    isNavigating.current = false;
 
     setCurrentUser(user.displayName || 'You');
 
@@ -33,39 +36,50 @@ function Room() {
       username: user.displayName || 'Anonymous',
     });
 
-    socket.on('roomUpdate', (playerData) => {
+    const handleRoomUpdate = (playerData) => {
       setPlayers(playerData);
-    });
+    };
+
+    socket.on('roomUpdate', handleRoomUpdate);
 
     return () => {
-      socket.off('roomUpdate');
+      socket.off('roomUpdate', handleRoomUpdate);
     };
   }, [socket, user, roomId]);
 
-  // Handle countdown and test start events
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('gameStarting', ({ countdown }) => {
+    const handleGameStarting = ({ countdown }) => {
       setShowCountdown(true);
       setCountdown(countdown);
-    });
+    };
 
-    socket.on('countdownUpdate', ({ countdown }) => {
+    const handleCountdownUpdate = ({ countdown }) => {
       setCountdown(countdown);
-    });
+    };
 
-    socket.on('testStarted', () => {
+    const handleTestStarted = () => {
       setTestStarted(true);
       setShowCountdown(false);
-      isRedirectingToTest.current = true;
+      isNavigating.current = true; 
       navigate(`/multiplayer/test/${roomId}`);
-    });
+    };
+
+    const handleTestEnded = () => {
+        setTestFinished(true);
+    };
+
+    socket.on('gameStarting', handleGameStarting);
+    socket.on('countdownUpdate', handleCountdownUpdate);
+    socket.on('testStarted', handleTestStarted);
+    socket.on('testEnded', handleTestEnded); 
 
     return () => {
-      socket.off('gameStarting');
-      socket.off('countdownUpdate');
-      socket.off('testStarted');
+      socket.off('gameStarting', handleGameStarting);
+      socket.off('countdownUpdate', handleCountdownUpdate);
+      socket.off('testStarted', handleTestStarted);
+      socket.off('testEnded', handleTestEnded);
     };
   }, [socket, roomId, navigate]);
 
@@ -73,47 +87,46 @@ function Room() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('error', (msg) => {
+    const handleError = (msg) => {
       toast.error(msg);
+      isNavigating.current = true; 
       navigate('/multiplayer');
-    });
+    };
+
+    socket.on('error', handleError);
 
     return () => {
-      socket.off('error');
+      socket.off('error', handleError);
     };
   }, [socket, navigate]);
 
-  // Handle leaving room when component unmounts (except when redirecting to test)
   useEffect(() => {
     return () => {
-      // Only leave room if not redirecting to test
-      if (!isRedirectingToTest.current && socket && user) {
+      if (!isNavigating.current && !testFinished && socket && user) {
         socket.emit('leaveRoom', { roomId, userId: user.uid });
       }
     };
-  }, [socket, user, roomId]);
+  }, [socket, user, roomId, testFinished]);
 
   // Handle browser tab close/refresh
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (socket && user && !isRedirectingToTest.current) {
+    const handleBeforeUnload = (event) => {
+      if (!isNavigating.current && !testFinished && socket && user) {
         socket.emit('leaveRoom', { roomId, userId: user.uid });
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [socket, user, roomId]);
+  }, [socket, user, roomId, testFinished]);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
-      toast.success("Room ID copied!", {
-        autoClose: 1500
-      });
+      toast.success("Room ID copied!", { autoClose: 1500 });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -123,21 +136,19 @@ function Room() {
 
   const handleStart = () => {
     if (!user || !socket) return;
-    socket.emit('startTest', {
-      roomId,
-      userId: user.uid,
-    });
+    socket.emit('startTest', { roomId, userId: user.uid });
   };
 
   const handleLeaveRoom = () => {
-    if (socket) {
-      socket.emit('leaveRoom', { roomId, userId: user?.uid });
+    isNavigating.current = true;
+    if (socket && user) {
+      socket.emit('leaveRoom', { roomId, userId: user.uid });
     }
     navigate('/multiplayer');
   };
 
   const isLeader = players.some(
-    player => player.userId === user?.uid && player.isLeader
+    (player) => player.userId === user?.uid && player.isLeader
   );
 
   return (
@@ -200,9 +211,9 @@ function Room() {
                       {player.username}
                       {player.isLeader && <span className="ml-2 text-xs bg-[#d32f2f] px-1 rounded">Leader</span>}
                     </span>
-                    {testStarted && (
+                    {testStarted && !testFinished && ( 
                       <span className="text-xs bg-[#2a2a2a] px-2 py-1 rounded min-w-[50px] text-center">
-                        {Math.min(100, Math.floor(player.progress))}%
+                        {Math.min(100, Math.floor(player.progress || 0))}%
                       </span>
                     )}
                   </li>

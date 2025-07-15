@@ -117,7 +117,7 @@ const useEngine = (
     clearTyped();
   }, [clearTyped, updateWords, resetTimer, resetTotalTyped]);
 
-  return { state, words, timeLeft, typed, errors, totalTyped, restart };
+  return { state, words, timeLeft, typed, errors, totalTyped: totalTyped.current, restart };
 };
 
 export default useEngine;

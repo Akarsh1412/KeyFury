@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { generateRoomId } from '../utils/helpers';
 import { useSocket } from '../context/socketContext';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 function Multiplayer() {
   const [roomCode, setRoomCode] = useState('');
@@ -55,7 +56,7 @@ function Multiplayer() {
       if (!socket || !socket.connected) {
         console.error("Socket not connected");
         return;
-      }
+      } 
 
       socket.emit('createRoom', {
         roomId: newRoomId,
@@ -65,7 +66,7 @@ function Multiplayer() {
           if (response?.success) {
             navigate(`/multiplayer/join/${newRoomId}`);
           } else {
-            alert(response?.message || "Failed to create room");
+            toast.error(response?.message || "Failed to create room");
           }
         }
       );
