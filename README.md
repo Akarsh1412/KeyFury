@@ -96,6 +96,7 @@ KeyFury uses an event-driven architecture optimized for real-time performance:
     timeLimit: 60
   }
 }
+```
 ## 🚀 Getting Started
 
 ### Prerequisites
