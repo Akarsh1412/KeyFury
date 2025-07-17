@@ -13,8 +13,6 @@ KeyFury is a real-time multiplayer typing game where players compete in typing c
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Here-brightgreen?style=for-the-badge)](https://key-fury.vercel.app/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-View_Source-blue?style=for-the-badge&logo=github)](https://github.com/Akarsh1412/KeyFury)
 
-![KeyFury Logo](https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/favicon.png)
-
 ## ✨ Features
 
 - **Multiplayer Mode**: Create private rooms or join existing ones using a unique Room ID.
