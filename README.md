@@ -1,146 +1,186 @@
-# KeyFury ⚡
+# KeyFury
 
 [![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFA611?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101?style=for-the-badge&logo=socketdotio)](https://socket.io/)
-[![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=for-the-badge&logo=redis)](https://redis.io/)
+[![Redis](https://img.shields.io/badge/Upstash_Redis-Serverless-DC382D?style=for-the-badge&logo=redis)](https://upstash.com/redis)
 [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 
-**KeyFury** is a real-time multiplayer typing game where players compete in typing challenges. Join rooms, chat with competitors, and test your typing speed against others with live statistics and post-game analytics. Also features a clean, distraction-free single-player mode.
+KeyFury is a real-time multiplayer typing game where players compete in typing challenges. Join rooms, chat with competitors, and test your typing speed against others with live statistics and post-game analytics. Also features a clean, distraction-free single-player mode.
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Here-brightgreen?style=for-the-badge)](https://key-fury.vercel.app/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-View_Source-blue?style=for-the-badge&logo=github)](https://github.com/Akarsh1412/KeyFury)
 
-![KeyFury Demo](https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/keyfury.gif)
+![KeyFury Logo](https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/favicon.png)
 
 ## ✨ Features
 
-- **🎮 Multiplayer Mode**: Create private rooms or join existing ones using a unique Room ID
-- **🏆 Single Player Mode**: Practice with configurable time limits (15/30/45/60 seconds)
-- **⚡ Real-time Competition**: Live WPM, accuracy, and progress tracking
-- **⏱️ Synchronized Gameplay**: Server-managed countdown for fair starts
-- **💬 Live In-Game Chat**: Communicate in room lobbies
-- **📊 Detailed Analytics**: Post-game leaderboards and performance graphs
-- **🔒 Secure Authentication**: Firebase Auth with email/password & Google Sign-In
-- **🎨 Modern UI**: Responsive design with Tailwind CSS
+- **Multiplayer Mode**: Create private rooms or join existing ones using a unique Room ID.
+- **Single Player Mode**: Practice and improve your typing speed with configurable time limits (15, 30, 45, 60 seconds).
+- **Real-time Competition**: See every player's WPM, accuracy, and progress bar update live during a match.
+- **Synchronized Gameplay**: A server-managed countdown ensures all players in a room start the test simultaneously for a fair race.
+- **Live In-Game Chat**: Communicate with other players in the room lobby before the game starts.
+- **Detailed Post-Game Analytics**: After each match, view a detailed leaderboard and personal performance stats. Compare your WPM, accuracy, and progress over time against other players with interactive graphs powered by **Recharts**.
+- **Secure Authentication**: User accounts are managed with **Firebase Authentication**, supporting both email/password and Google Sign-In.
+- **Modern & Responsive UI**: A sleek, distraction-free interface built with **React** and **Tailwind CSS**.
 
-## 🖼️ Screenshots
+## 📸 Screenshots
 
-<table>
-  <tr>
-    <td align="center">Multiplayer Lobby</td>
-    <td align="center">Live Race</td>
-    <td align="center">Results & Analytics</td>
-  </tr>
-  <tr>
-    <td><img src="https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/lobby.png" width="300" alt="Multiplayer Lobby"></td>
-    <td><img src="https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/race.png" width="300" alt="Live Race"></td>
-    <td><img src="https://raw.githubusercontent.com/Akarsh1412/KeyFury/main/client/public/results.png" width="300" alt="Results Page"></td>
-  </tr>
-</table>
+### Home Page
+<img width="1903" height="985" alt="image" src="https://github.com/user-attachments/assets/fcf64b92-fa05-4e36-b231-6f875de07b57" />
+
+### Multiplayer Lobby
+<img width="1903" height="989" alt="image" src="https://github.com/user-attachments/assets/ee576ec5-56e8-4f3b-a2c2-3e495dd745af" />
+
+### Live Race
+<img width="1899" height="983" alt="image" src="https://github.com/user-attachments/assets/9579bb0f-1be0-4bb4-9255-4830115480d2" />
+
+### Results
+<img width="1900" height="990" alt="image" src="https://github.com/user-attachments/assets/8d8ef2e8-cb5d-4cb3-8b40-52eb0f9d95ec" />
+<img width="1901" height="983" alt="image" src="https://github.com/user-attachments/assets/1790acce-f6b4-44e8-b18b-6d29c657b3ce" />
 
 ## 🛠️ Tech Stack
 
+The project is a monorepo with a separate `client` and `server` directory.
+
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 18 + Vite | Core framework |
-| Tailwind CSS | Styling |
-| React Router DOM | Navigation |
-| Context API + Custom Hooks | State management |
-| Socket.IO Client | Real-time communication |
-| Firebase Authentication | User management |
-| Recharts | Data visualization |
+- **Framework**: React 18 (with Vite)
+- **Styling**: Tailwind CSS
+- **Routing**: React Router DOM
+- **Real-time Communication**: Socket.IO Client
+- **Authentication**: Firebase Authentication
+- **Data Fetching**: Axios
+- **Data Visualization**: Recharts
+- **State Management**: React Context API, Custom Hooks (`useEngine`, `useSyncedTimer`)
+- **UI/UX**: Lucide React (icons), React Toastify (notifications)
 
 ### Backend
-| Technology | Purpose |
-|------------|---------|
-| Node.js 18 | Runtime environment |
-| Express.js | Server framework |
-| Redis | In-memory data store |
-| Socket.IO | Real-time communication |
-| dotenv | Environment management |
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database / In-Memory Store**: [Upstash Redis](https://upstash.com/redis)
+- **Real-time Communication**: Socket.IO
+- **Environment Management**: `dotenv`
 
-## ⚙️ Architecture Overview
+## 🏗️ Architecture Overview
 
-KeyFury uses an event-driven architecture optimized for real-time performance:
+KeyFury is built on a robust, event-driven architecture designed for low-latency, real-time interactions.
 
-### Core Components
-1. **Real-time Engine**: Socket.IO for instant communication
-2. **State Management**: Redis as single source of truth
-3. **Performance Optimization**:
-   - Client-side throttling (300ms stats updates)
-   - Background cleanup services
-4. **Hybrid Data Flow**:
-   - WebSockets for live gameplay events
-   - REST API for final results retrieval
-5. **Game Synchronization**:
-   - Server-controlled countdown timers
-   - Client-side latency correction
+- **Real-time Engine with Socket.IO**: The core of the multiplayer experience is powered by Socket.IO. The server listens for events like `createRoom`, `joinRoom`, `startTest`, and `chatMessage`, and efficiently broadcasts state updates to the relevant clients.
 
-### Redis Data Structure
-```javascript
-{
-  "room:ABC123": {
-    players: {
-      "player1": { wpm: 72, accuracy: 98%, progress: 87% },
-      "player2": { wpm: 68, accuracy: 95%, progress: 92% }
-    },
-    chat: [
-      { user: "player1", text: "Good luck!", timestamp: 1712345678 },
-      { user: "player2", text: "You too!", timestamp: 1712345680 }
-    ],
-    status: "playing",
-    timeLimit: 60
-  }
-}
-```
+- **State Management with Upstash Redis**: The project leverages **Upstash** for a serverless Redis database, ensuring low-latency data access and simplifying management. It serves as the single source of truth for all ephemeral game data:
+  - **Room & Player Data**: Stored in Redis Hashes for quick read/write access. This includes live stats and the final `performanceHistory` for each player.
+  - **Chat History**: Stored in Redis Lists, capped to the last 50 messages to save memory.
+  - **Session Management**: Each socket connection is mapped to a user and room, with a TTL for automatic cleanup.
+  - **Efficiency**: **Redis Pipelining** is used to batch multiple commands into a single request, reducing network round-trip time and ensuring atomicity for complex operations.
+
+- **Performance Optimization**:
+  - **Throttling**: To prevent overwhelming the server with frequent updates, player stats (`WPM`, `progress`) are sent from the client using a custom `useThrottle` hook. This limits the rate of `updateStats` emits to one every 300ms.
+  - **Background Services**: The server runs periodic cleanup tasks to validate active rooms and remove stale data, ensuring the application remains stable and performant over time.
+
+- **Hybrid Data Flow**: The application uses a hybrid data flow model. Real-time game events and live stats are handled via WebSockets. After the test, the comprehensive results, including `performanceHistory`, are fetched via a standard RESTful API endpoint (`/api/results/:roomId`). This approach leverages the strengths of both protocols: WebSockets for low-latency live updates and REST for retrieving a final, complete dataset.
+
+- **Game Synchronization**: The `useSyncedTimer` custom hook on the frontend works in tandem with the server to keep all players' timers perfectly aligned. The server broadcasts sync events every 2 seconds, and the client-side hook intelligently corrects for network latency, providing a smooth and fair countdown experience.
+
 ## 🚀 Getting Started
 
+Follow these instructions to set up and run the project locally.
+
 ### Prerequisites
-Ensure you have the following installed and configured:
-- [Node.js](https://nodejs.org/) v18 or higher
-- [Redis](https://redis.io/) instance (local or cloud)
-- [Firebase](https://firebase.google.com/) project
 
-### Installation
-```bash
-# Clone repository
-git clone https://github.com/Akarsh1412/KeyFury
-cd KeyFury
+- Node.js (v18.x or later)
+- npm or yarn
+- A Redis instance. The project is configured for **[Upstash Redis](https://upstash.com/)**, but a local instance or another cloud provider will also work.
 
-# Backend setup
-cd server
-npm install
+### 1. Clone the Repository
+  ```
+  git clone https://github.com/Akarsh1412/KeyFury
+  cd KeyFury
+  ```
 
-# Create environment file
-cat > .env <<EOL
-PORT=8080
-CLIENT_URL=http://localhost:5173
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-REDIS_PASSWORD=
-EOL
+### 2. Backend Setup
+- Navigate to the server directory
+  ```
+  cd server
+  ```
+- Install dependencies
+  ```
+  npm install
+  ```
+- Create a `.env` file. You can get your `REDIS_URL` and `REDIS_TOKEN` from your Upstash database console.
 
-# Start backend
-npm run dev
+  **`server/.env`**
+  ```
+  PORT=5000
+  CLIENT_URL=http://localhost:5173
 
-# Frontend setup
-cd ../client
-npm install
+  REDIS_URL=YOUR_UPSTASH_REDIS_URL
+  REDIS_TOKEN=YOUR_UPSTASH_REDIS_TOKEN
+  ```
 
-# Create environment file (replace with your Firebase credentials)
-cat > .env.local <<EOL
-VITE_API_BASE_URL=http://localhost:8080
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-EOL
+- Finally, start the backend server:
+  ```
+  npm run dev
+  ```
+### 3. Frontend Setup
+- Navigate to the client directory from the root
+  ```
+  cd client
+  ```
+- Install dependencies
+  ```
+  npm install
+  ```
+- Set up a new project on the [Firebase Console](https://console.firebase.google.com/). Enable Email/Password and Google authentication methods. Then, get your project's configuration keys and add them to a new `.env` file.
 
-# Start frontend
-npm run dev
+    **`client/.env`**
+  ```
+  VITE_BACKEND_URL="http://localhost:5000"
+
+  VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY
+  VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_AUTH_DOMAIN
+  VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+  VITE_FIREBASE_STORGE_BUCKET=YOUR_FIREBASE_STORAGE_BUCKET
+  VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_FIREBASE_MESSAGING_SENDER_ID
+  VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+  VITE_FIREBASE_MEASUREMENT_ID=YOUR_FIREBASE_MEASUREMENT_ID
+  ```
+- Finally, start the frontend development server:
+  ```
+  npm run dev
+  ```
+
+
+You can now access the application at `http://localhost:5173`.
+
+## 📡 API and Key Events
+
+### Socket.IO Events
+
+- `createRoom`: Initializes a new room with the creator as the leader.
+- `joinRoom`: Allows a user to join an existing room.
+- `leaveRoom`: Removes a player from a room and handles leader reassignment if necessary.
+- `chatMessage`: Broadcasts a message to all players in a room.
+- `startTest`: Initiated by the room leader; starts the countdown for all players.
+- `updateStats`: Sent from a client to the server to update their live game statistics.
+- `liveStats`: Broadcast from the server to all clients with updated stats for all players.
+- `testEnded`: Sent when the game is over (time up or all players finished).
+
+### REST API Endpoints
+
+- `GET /api/results/:roomId`: Fetches the final results and performance history for all players in a completed game.
+
+## 🤝 Contributing
+
+Contributions are welcome! If you have suggestions or want to report a bug, please feel free to open an issue on the [GitHub repository](https://github.com/Akarsh1412/KeyFury/issues).
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## 📜 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
