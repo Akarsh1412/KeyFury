@@ -115,7 +115,7 @@ export const leaveRoom = async (io, socket, { roomId, userId }) => {
     } else {
       if (wasLeader) {
         const newLeaderId = remainingPlayerIds[0];
-        const newLeaderData = JSON.parse(playersData[newLeaderId]);
+        const newLeaderData = playersData[newLeaderId];
         newLeaderData.isLeader = true;
         
         const roomTtl = await redis.ttl(`room:${roomId}`);
